@@ -1,0 +1,6 @@
+@Sistema_de_Gestion_de_Activos_HostAddress = http://localhost:5054
+
+GET {{Sistema_de_Gestion_de_Activos_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
