@@ -41,6 +41,9 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 // Módulo 1 - Gestión de Activos
 builder.Services.AddScoped<IActivoService, ActivoService>();
 
+// Módulo 2 - Movimientos
+builder.Services.AddScoped<IMovimientoService, MovimientoService>();
+
 // Servicios de Autenticación, Correo y Auditoría
 builder.Services.AddScoped<IEmailService, EmailServiceMock>();
 builder.Services.AddScoped<IAuthService, AuthService>();
