@@ -1,0 +1,181 @@
+@page "/reportes/valor-departamento"
+@using Sistema_de_Gestion_de_Activos.Application.ViewModels
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IReporteDepreciacionService ReporteService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Valor de Activos por Departamento</PageTitle>
+
+<div class="mb-6">
+    <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Valor de Activos por Departamento</h4>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">Resumen gerencial de inversiones y depreciación agrupado por ubicación</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Tabla de Resumen -->
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-semibold text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-6 py-4">Ubicación / Depto</th>
+                        <th class="px-6 py-4 text-center">Nº Activos</th>
+                        <th class="px-6 py-4 text-right">Inversión (Costo Orig.)</th>
+                        <th class="px-6 py-4 text-right">Valor Actual (Libros)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @if (Model?.Departamentos != null)
+                    {
+                        @foreach (var depto in Model.Departamentos)
+                        {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@depto.NombreUbicacion</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                        @depto.CantidadActivos
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">@depto.ValorOriginalTotal.ToString("C")</td>
+                                <td class="px-6 py-4 text-right font-medium text-primary-600 dark:text-primary-400">@depto.ValorActualTotal.ToString("C")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot class="bg-gray-50 dark:bg-gray-700/80 font-bold border-t-2 border-gray-200 dark:border-gray-600">
+                    <tr>
+                        <td class="px-6 py-4 text-gray-900 dark:text-white">TOTAL GENERAL</td>
+                        <td class="px-6 py-4 text-center text-gray-900 dark:text-white">@(Model?.Departamentos?.Sum(d => d.CantidadActivos) ?? 0)</td>
+                        <td class="px-6 py-4 text-right text-gray-900 dark:text-white">@(Model?.Departamentos?.Sum(d => d.ValorOriginalTotal).ToString("C") ?? "$0.00")</td>
+                        <td class="px-6 py-4 text-right text-primary-700 dark:text-primary-300">@(Model?.Departamentos?.Sum(d => d.ValorActualTotal).ToString("C") ?? "$0.00")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Gráfica SVG Dinámica -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center items-center h-full min-h-[300px]">
+        <h5 class="text-lg font-bold text-gray-900 dark:text-white mb-6 w-full text-center">Distribución de Inversión</h5>
+        
+        @if (Model?.Departamentos != null && Model.Departamentos.Any() && Model.Departamentos.Sum(d => d.ValorOriginalTotal) > 0)
+        {
+            <div class="relative flex items-center justify-center w-48 h-48">
+                <!-- SVG Donut Chart -->
+                <svg viewBox="0 0 42 42" class="w-full h-full transform -rotate-90">
+                    @{
+                        decimal totalInversion = Model.Departamentos.Sum(d => d.ValorOriginalTotal);
+                        decimal offsetAcumulado = 0;
+                        int i = 0;
+                        
+                        foreach (var depto in Model.Departamentos.Where(d => d.ValorOriginalTotal > 0))
+                        {
+                            decimal porcentaje = (depto.ValorOriginalTotal / totalInversion) * 100m;
+                            
+                            <!-- Círculo de la porción -->
+                            <circle cx="21" cy="21" r="15.91549430918954" 
+                                    fill="transparent" 
+                                    stroke="@GetChartColor(i)" 
+                                    stroke-width="6" 
+                                    stroke-dasharray="@porcentaje.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) @((100m - porcentaje).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture))" 
+                                    stroke-dashoffset="@(-offsetAcumulado).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">
+                                <title>@depto.NombreUbicacion: @porcentaje.ToString("0.0")% (@depto.ValorOriginalTotal.ToString("C"))</title>
+                            </circle>
+                            
+                            offsetAcumulado += porcentaje;
+                            i++;
+                        }
+                    }
+                </svg>
+                
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span class="block text-xl font-bold text-gray-900 dark:text-white">@(Model.Departamentos.Sum(d => d.CantidadActivos))</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Total Activos</span>
+                </div>
+            </div>
+            
+            <div class="mt-8 grid grid-cols-2 gap-4 w-full text-xs">
+                @{
+                    int j = 0;
+                    foreach (var depto in Model.Departamentos.Where(d => d.ValorOriginalTotal > 0))
+                    {
+                        <div class="flex items-center gap-2" title="@depto.ValorOriginalTotal.ToString("C")">
+                            <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: @GetChartColor(j)"></span> 
+                            <span class="truncate">@depto.NombreUbicacion</span>
+                        </div>
+                        j++;
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 h-48">
+                <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                <p>No hay datos de inversión</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="flex justify-end gap-3">
+    <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        Imprimir
+    </button>
+    <button type="button" @onclick="ExportarExcel" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Exportar a Excel
+    </button>
+</div>
+
+@code {
+    private AnalisisValorDepartamentoViewModel Model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dtos = await ReporteService.GenerarAnalisisPorDepartamentoAsync(null);
+        
+        Model.Departamentos = dtos.Select(d => new DepartamentoValorViewModel
+        {
+            UbicacionId = Guid.Empty,
+            NombreUbicacion = d.Departamento + " - " + d.Oficina,
+            CantidadActivos = 0,
+            ValorOriginalTotal = d.ValorOriginalTotal,
+            ValorActualTotal = d.ValorActualTotal
+        }).ToList();
+    }
+
+    private string GetChartColor(int index)
+    {
+        string[] colores = new[] { 
+            "#14b8a6", // primary (Teal)
+            "#3b82f6", // blue
+            "#f59e0b", // amber
+            "#ec4899", // pink
+            "#8b5cf6", // violet
+            "#10b981", // emerald
+            "#ef4444", // red
+            "#64748b"  // slate
+        };
+        return colores[index % colores.Length];
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (Model.Departamentos == null || !Model.Departamentos.Any()) return;
+        
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Ubicacion;CantidadActivos;InversionOriginal;ValorActualLibros");
+        
+        foreach (var depto in Model.Departamentos)
+        {
+            sb.AppendLine($"{depto.NombreUbicacion};{depto.CantidadActivos};{depto.ValorOriginalTotal};{depto.ValorActualTotal}");
+        }
+        
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Valor_Departamento.csv", base64);
+    }
+}

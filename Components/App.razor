@@ -35,5 +35,15 @@
 <body class="bg-gray-50 text-gray-950 antialiased dark:bg-gray-950 dark:text-gray-50">
     <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.downloadFileFromBase64 = function(filename, base64) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = "data:application/octet-stream;base64," + base64;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>

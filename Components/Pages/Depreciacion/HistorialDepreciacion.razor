@@ -1,0 +1,129 @@
+@page "/historial-depreciacion"
+@using Sistema_de_Gestion_de_Activos.Application.ViewModels
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@using Microsoft.EntityFrameworkCore
+@inject IHistorialDepreciacionService HistorialService
+@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
+
+<PageTitle>Consulta de Depreciación Histórica</PageTitle>
+
+<div class="mb-6">
+    <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Consultar Depreciación a una fecha (Máquina del tiempo)</h4>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">Esta herramienta consulta el "Snapshot" mensual guardado o calcula al vuelo si la fecha es menor al cierre contable.</p>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Código o Nombre del Activo</label>
+            <input type="text" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej. COMP-001" @bind="codigoBusqueda" />
+        </div>
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de corte</label>
+            <input type="date" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" @bind="fechaBusqueda" />
+        </div>
+        <div>
+            <button type="button" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors" @onclick="Consultar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                Consultar
+            </button>
+            <button type="button" class="mt-2 md:mt-0 md:ml-2 w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600" @onclick="GenerarCierreMensual">
+                Cierre Mensual
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <div class="flex justify-center p-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+    </div>
+}
+else if (resultado != null)
+{
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h5 class="font-bold text-gray-900 dark:text-white">Resultados para la fecha: <span class="text-primary-600 dark:text-primary-400">@resultado.FechaConsulta.ToString("dd/MM/yyyy")</span></h5>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600">
+                    <span class="block text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Costo Original</span>
+                    <span class="text-xl font-semibold text-gray-900 dark:text-white">@costoOriginalActivo.ToString("C")</span>
+                </div>
+                <div class="p-4 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800">
+                    <span class="block text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">Valor en libros</span>
+                    <span class="text-xl font-bold text-primary-700 dark:text-primary-300">@resultado.ValorActual.ToString("C")</span>
+                </div>
+                <div class="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
+                    <span class="block text-red-600 dark:text-red-400 text-xs uppercase tracking-wider mb-1">Depreciación Acum.</span>
+                    <span class="text-xl font-semibold text-red-700 dark:text-red-300">@resultado.DepreciacionAcumulada.ToString("C")</span>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600">
+                    <span class="block text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">% Consumido</span>
+                    <span class="text-xl font-semibold text-gray-900 dark:text-white">@resultado.PorcentajeConsumido.ToString("0.0")%</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg flex items-start">
+                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>Nota:</strong> Estos valores representan el estado contable del activo en la fecha solicitada. Los montos fueron extraídos de la tabla histórica inmutable generada por el Job mensual.
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string codigoBusqueda = "";
+    private DateTime fechaBusqueda = DateTime.Now;
+    private bool cargando = false;
+    private HistorialDepreciacionViewModel? resultado;
+    private decimal costoOriginalActivo = 0m;
+
+    private async Task Consultar()
+    {
+        if (string.IsNullOrWhiteSpace(codigoBusqueda)) return;
+        
+        cargando = true;
+        resultado = null;
+        
+        var activo = await DbContext.Activos
+            .FirstOrDefaultAsync(a => a.Codigo == codigoBusqueda || a.Descripcion == codigoBusqueda);
+
+        if (activo != null)
+        {
+            costoOriginalActivo = activo.CostoInicial;
+            var historiales = await HistorialService.ObtenerHistorialPorActivoAsync(activo.Id);
+            
+            // Buscar el más cercano hacia atrás en el tiempo
+            var snapshot = historiales
+                .Where(h => h.FechaConsulta.Date <= fechaBusqueda.Date)
+                .OrderByDescending(h => h.FechaConsulta)
+                .FirstOrDefault();
+
+            if (snapshot != null)
+            {
+                resultado = new HistorialDepreciacionViewModel
+                {
+                    FechaConsulta = snapshot.FechaConsulta,
+                    ValorActual = snapshot.ValorActual,
+                    ValorResidual = snapshot.ValorResidual,
+                    DepreciacionAcumulada = snapshot.DepreciacionAcumulada,
+                    PorcentajeConsumido = snapshot.PorcentajeConsumido
+                };
+            }
+        }
+        
+        cargando = false;
+    }
+
+    private async Task GenerarCierreMensual()
+    {
+        cargando = true;
+        await HistorialService.GenerarSnapshotMensualAsync();
+        cargando = false;
+    }
+}
