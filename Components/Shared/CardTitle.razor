@@ -1,0 +1,10 @@
+@code {
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}
+
+<h3 class="@($"text-lg font-semibold leading-none tracking-tight {Class}")"
+    @attributes="AdditionalAttributes">
+    @ChildContent
+</h3>

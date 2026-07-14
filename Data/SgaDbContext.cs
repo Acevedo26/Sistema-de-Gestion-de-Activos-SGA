@@ -20,16 +20,18 @@ namespace Sistema_de_Gestion_de_Activos.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<TokenRecuperacion> TokensRecuperacion { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
-        public DbSet<ParametroSistema> ParametrosSistema { get; set; }
-        public DbSet<Categoria> Categorias { get; set; }
-        public DbSet<Ubicacion> Ubicaciones { get; set; }
-        public DbSet<Activo> Activos { get; set; }
-        public DbSet<Depreciacion> Depreciaciones { get; set; }
-        public DbSet<HistorialDepreciacion> HistorialDepreciaciones { get; set; }
-        public DbSet<Movimiento> Movimientos { get; set; }
-        public DbSet<Mantenimiento> Mantenimientos { get; set; }
-        public DbSet<ProgramaMantenimiento> ProgramasMantenimiento { get; set; }
-        public DbSet<Notificacion> Notificaciones { get; set; }
+        
+        // --- SE COMENTAN MÓDULOS AJENOS (Usuario solo implementará gestión de usuarios) ---
+        // public DbSet<ParametroSistema> ParametrosSistema { get; set; }
+        // public DbSet<Categoria> Categorias { get; set; }
+        // public DbSet<Ubicacion> Ubicaciones { get; set; }
+        // public DbSet<Activo> Activos { get; set; }
+        // public DbSet<Depreciacion> Depreciaciones { get; set; }
+        // public DbSet<HistorialDepreciacion> HistorialDepreciaciones { get; set; }
+        // public DbSet<Movimiento> Movimientos { get; set; }
+        // public DbSet<Mantenimiento> Mantenimientos { get; set; }
+        // public DbSet<ProgramaMantenimiento> ProgramasMantenimiento { get; set; }
+        // public DbSet<Notificacion> Notificaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +54,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .Property(e => e.Accion)
                 .HasConversion<string>();
 
+            /* --- SE COMENTAN MÓDULOS AJENOS ---
             modelBuilder.Entity<Activo>()
                 .Property(e => e.Estado)
                 .HasConversion<string>();
@@ -71,6 +74,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
             modelBuilder.Entity<Notificacion>()
                 .Property(e => e.Tipo)
                 .HasConversion<string>();
+            */
 
             // ══════════════════════════════════════════
             // 2. ÍNDICES Y RESTRICCIONES DE UNICIDAD
@@ -88,10 +92,11 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .IsUnique();
 
             modelBuilder.Entity<Auditoria>()
-                .HasIndex(a => new { a.NombreTabla, a.RegistroId });
+                .HasIndex(a => a.TablaAfectada);
             modelBuilder.Entity<Auditoria>()
-                .HasIndex(a => a.Fecha);
+                .HasIndex(a => a.FechaAccion);
 
+            /* --- SE COMENTAN ÍNDICES DE MÓDULOS AJENOS ---
             modelBuilder.Entity<ParametroSistema>()
                 .HasIndex(p => p.Clave)
                 .IsUnique();
@@ -125,6 +130,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .HasIndex(n => new { n.Tipo, n.ProgramaMantenimientoId });
             modelBuilder.Entity<Notificacion>()
                 .HasIndex(n => n.FechaGeneracion);
+            */
 
             // ══════════════════════════════════════════
             // 3. RELACIONES (18 FK del DBML)
@@ -157,6 +163,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .HasForeignKey(a => a.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            /* --- SE COMENTAN RELACIONES DE MÓDULOS AJENOS ---
             // ── Relación 4: Activo → Categoria (Muchos a Uno) ──
             // DBML: activos.categoria_id → categorias.id
             modelBuilder.Entity<Activo>()
@@ -276,6 +283,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .WithMany()
                 .HasForeignKey(n => n.ProgramaMantenimientoId)
                 .OnDelete(DeleteBehavior.Restrict);
+            */
         }
     }
 }
