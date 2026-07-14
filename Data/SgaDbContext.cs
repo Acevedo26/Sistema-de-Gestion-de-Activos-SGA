@@ -58,10 +58,22 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .Property(e => e.Tipo)
                 .HasConversion<string>();
 
-            // ══════════════════════════════════════════
-            // 2. ÍNDICES Y RESTRICCIONES DE UNICIDAD
-            // ══════════════════════════════════════════
-            modelBuilder.Entity<Rol>()
+			modelBuilder.Entity<Mantenimiento>()
+                .Property(e => e.Tipo)
+                .HasConversion<string>();
+
+			modelBuilder.Entity<Mantenimiento>()
+				.Property(e => e.Estado)
+				.HasConversion<string>();
+
+			modelBuilder.Entity<ProgramaMantenimiento>()
+				.Property(e => e.Estado)
+				.HasConversion<string>();
+
+			// ══════════════════════════════════════════
+			// 2. ÍNDICES Y RESTRICCIONES DE UNICIDAD
+			// ══════════════════════════════════════════
+			modelBuilder.Entity<Rol>()
                 .HasIndex(r => r.Nombre)
                 .IsUnique();
 
@@ -101,11 +113,19 @@ namespace Sistema_de_Gestion_de_Activos.Data
             modelBuilder.Entity<Notificacion>()
                 .HasIndex(n => n.FechaGeneracion);
 
-            // ══════════════════════════════════════════
-            // 3. RELACIONES
-            // ══════════════════════════════════════════
+			modelBuilder.Entity<Mantenimiento>()
+	            .HasIndex(m => new { m.ActivoId, m.FechaInicio });
+			modelBuilder.Entity<Mantenimiento>()
+				.HasIndex(m => new { m.TecnicoId, m.FechaInicio });
 
-            modelBuilder.Entity<Usuario>()
+			modelBuilder.Entity<ProgramaMantenimiento>()
+				.HasIndex(p => new { p.ActivoId, p.ProximaFecha });
+
+			// ══════════════════════════════════════════
+			// 3. RELACIONES
+			// ══════════════════════════════════════════
+
+			modelBuilder.Entity<Usuario>()
                 .HasOne(u => u.Rol)
                 .WithMany(r => r.Usuarios)
                 .HasForeignKey(u => u.RolId)
@@ -158,6 +178,30 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .WithMany()
                 .HasForeignKey(n => n.ProgramaMantenimientoId)
                 .OnDelete(DeleteBehavior.Cascade);
-        }
+
+			modelBuilder.Entity<Mantenimiento>()
+                .HasOne(m => m.Activo)
+                .WithMany()
+                .HasForeignKey(m => m.ActivoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Mantenimiento>()
+				.HasOne(m => m.Tecnico)
+				.WithMany()
+				.HasForeignKey(m => m.TecnicoId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<ProgramaMantenimiento>()
+				.HasOne(p => p.Activo)
+				.WithMany()
+				.HasForeignKey(p => p.ActivoId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<ProgramaMantenimiento>()
+                .HasOne(p => p.TecnicoAsignado)
+                .WithMany()
+                .HasForeignKey(p => p.TecnicoAsignadoId)
+                .OnDelete(DeleteBehavior.Restrict);
+		}
     }
 }

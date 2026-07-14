@@ -1,0 +1,102 @@
+﻿@page "/mantenimiento/finalizar/{Id:guid}"
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IMantenimientoService MantenimientoService
+@inject NavigationManager Navigation
+
+<PageTitle>Finalizar Mantenimiento</PageTitle>
+
+<div class="max-w-xl mx-auto">
+    <div class="flex items-center gap-2 mb-6">
+        <a href="/mantenimiento" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-0">Finalizar Mantenimiento</h4>
+    </div>
+
+    @if (mantenimiento == null)
+    {
+        <p class="text-gray-400">Cargando...</p>
+    }
+    else
+    {
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-3 rounded text-sm dark:bg-red-900/30 dark:border-red-500 dark:text-red-200">
+                    @error
+                </div>
+            }
+
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4 text-sm text-gray-600 dark:text-gray-300">
+                <p><span class="font-semibold text-gray-900 dark:text-white">Activo:</span> @mantenimiento.ActivoDescripcion</p>
+                <p><span class="font-semibold text-gray-900 dark:text-white">Técnico:</span> @mantenimiento.TecnicoNombre</p>
+                <p><span class="font-semibold text-gray-900 dark:text-white">Tipo:</span> @mantenimiento.Tipo</p>
+                <p><span class="font-semibold text-gray-900 dark:text-white">Descripción:</span> @mantenimiento.Descripcion</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de finalización</label>
+                <input type="date" class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="fechaFin" @bind:format="yyyy-MM-dd" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Costo final</label>
+                <input type="number" step="0.01" min="0" class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="modelo.Costo" />
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <a href="/mantenimiento" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                    Cancelar
+                </a>
+                <button type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700" @onclick="Guardar">
+                    Finalizar
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MantenimientoResponseDto? mantenimiento;
+    private MantenimientoFinalizarDto modelo = new();
+    private DateTime fechaFin = DateTime.Today;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mantenimiento = await MantenimientoService.ObtenerPorIdAsync(Id);
+            modelo.Costo = mantenimiento.Costo;
+        }
+        catch (KeyNotFoundException)
+        {
+            error = "Mantenimiento no encontrado.";
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (mantenimiento == null) return;
+
+        error = null;
+        modelo.FechaFin = fechaFin;
+
+        try
+        {
+            await MantenimientoService.FinalizarAsync(Id, modelo);
+            Navigation.NavigateTo("/mantenimiento");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

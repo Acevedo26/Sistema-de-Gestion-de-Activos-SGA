@@ -1,0 +1,154 @@
+﻿@page "/mantenimiento/programas"
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@using Sistema_de_Gestion_de_Activos.Domain.Enums
+@inject IProgramaMantenimientoService ProgramaService
+@inject NavigationManager Navigation
+
+<PageTitle>Programas de Mantenimiento Preventivo</PageTitle>
+
+<div class="flex justify-between items-center mb-6">
+    <div class="flex items-center gap-2">
+        <a href="/mantenimiento" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-0">Programas de Mantenimiento Preventivo</h4>
+    </div>
+    <div class="flex gap-3">
+        <button class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                @onclick="GenerarNotificaciones" disabled="@procesando">
+            @(procesando ? "Procesando..." : "Generar notificaciones")
+        </button>
+        <button class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                @onclick="GenerarOrdenes" disabled="@procesando">
+            @(procesando ? "Procesando..." : "Generar órdenes vencidas")
+        </button>
+        <button class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
+                @onclick="IrACrear">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Nuevo Programa
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="bg-green-50 border-l-4 border-green-500 text-green-800 p-3 rounded text-sm dark:bg-green-900/30 dark:border-green-500 dark:text-green-200 mb-4">
+        @mensaje
+    </div>
+}
+
+@if (proximosAVencer != null && proximosAVencer.Any())
+{
+    <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-md p-4 mb-6">
+        <p class="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">
+            ⚠️ @proximosAVencer.Count() programa(s) próximo(s) a vencer (próximos 7 días):
+        </p>
+        <ul class="text-sm text-amber-700 dark:text-amber-200 list-disc list-inside">
+            @foreach (var p in proximosAVencer)
+            {
+                <li>@p.ActivoDescripcion — @p.Titulo (vence @p.ProximaFecha.ToString("dd/MM/yyyy"))</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300 align-middle">
+            <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-semibold text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                    <th class="px-6 py-4">Activo</th>
+                    <th class="px-6 py-4">Título</th>
+                    <th class="px-6 py-4">Frecuencia</th>
+                    <th class="px-6 py-4">Próxima fecha</th>
+                    <th class="px-6 py-4">Técnico asignado</th>
+                    <th class="px-6 py-4">Estado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                @if (programas != null)
+                {
+                    @foreach (var p in programas)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@p.ActivoDescripcion</td>
+                            <td class="px-6 py-4">@p.Titulo</td>
+                            <td class="px-6 py-4">@DescripcionFrecuencia(p.FrecuenciaDias)</td>
+                            <td class="px-6 py-4">@p.ProximaFecha.ToString("dd/MM/yyyy")</td>
+                            <td class="px-6 py-4">@(p.TecnicoAsignadoNombre ?? "Sin asignar")</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(p.Estado == EstadoPrograma.Activo ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300")">
+                                    @p.Estado
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    @if (!programas.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                                No hay programas de mantenimiento preventivo registrados.
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<ProgramaMantenimientoResponseDto>? programas;
+    private IEnumerable<ProgramaMantenimientoResponseDto>? proximosAVencer;
+    private bool procesando = false;
+    private string? mensaje;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        programas = (await ProgramaService.ObtenerTodosAsync()).ToList();
+        proximosAVencer = await ProgramaService.ObtenerProximosAVencerAsync(7);
+    }
+
+    private void IrACrear() => Navigation.NavigateTo("/mantenimiento/programas/crear");
+
+    private async Task GenerarOrdenes()
+    {
+        procesando = true;
+        var cantidad = await ProgramaService.GenerarOrdenesPendientesAsync();
+        mensaje = cantidad > 0
+            ? $"Se generaron {cantidad} orden(es) de mantenimiento pendiente(s)."
+            : "No hay programas vencidos con técnico asignado por generar.";
+        await CargarDatos();
+        procesando = false;
+    }
+
+    private async Task GenerarNotificaciones()
+    {
+        procesando = true;
+        var cantidad = await ProgramaService.GenerarNotificacionesVencimientoAsync(7);
+        mensaje = cantidad > 0
+            ? $"Se generaron {cantidad} notificación(es) nueva(s)."
+            : "No hay notificaciones nuevas por generar.";
+        await CargarDatos();
+        procesando = false;
+    }
+
+    private static string DescripcionFrecuencia(int dias) => dias switch
+    {
+        30 => "Mensual (30 días)",
+        90 => "Trimestral (90 días)",
+        180 => "Semestral (180 días)",
+        365 => "Anual (365 días)",
+        _ => $"Cada {dias} días"
+    };
+}

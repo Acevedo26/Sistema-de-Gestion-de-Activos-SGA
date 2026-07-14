@@ -49,6 +49,10 @@ builder.Services.AddScoped<IEmailService, EmailServiceMock>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
+// Servicios del Módulo 3 — Mantenimiento
+builder.Services.AddScoped<IMantenimientoService, MantenimientoService>();
+builder.Services.AddScoped<IProgramaMantenimientoService, ProgramaMantenimientoService>();
+
 // Servicios del Módulo 6 — Depreciación
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IDepreciacionService, DepreciacionService>();
