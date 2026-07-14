@@ -1,0 +1,248 @@
+@page "/usuarios"
+@layout Layout._Layout
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
+@using Sistema_de_Gestion_de_Activos.Domain.Enums
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
+
+@code {
+    private IEnumerable<UsuarioResponseDto> usuarios = Array.Empty<UsuarioResponseDto>();
+    private IEnumerable<RolResponseDto> roles = Array.Empty<RolResponseDto>();
+    private bool isLoading = true;
+
+    // Modal state
+    private bool isModalOpen = false;
+    private bool isSubmitting = false;
+    private string error = string.Empty;
+    private bool showPassword = false;
+
+    // Form model
+    private UsuarioRequestDto newUser = new UsuarioRequestDto();
+
+    private string PasswordType => showPassword ? "text" : "password";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            roles = await UsuarioService.ObtenerRolesAsync();
+            usuarios = await UsuarioService.ObtenerTodosAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenNewUserModal()
+    {
+        newUser = new UsuarioRequestDto();
+        if (roles.Any())
+        {
+            newUser.RolId = roles.First().Id;
+        }
+        error = string.Empty;
+        showPassword = false;
+        isModalOpen = true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        error = string.Empty;
+        isSubmitting = true;
+
+        try
+        {
+            await UsuarioService.CrearUsuarioAsync(newUser);
+            isModalOpen = false;
+            await LoadData(); // refresh list
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task ToggleEstado(UsuarioResponseDto usuario)
+    {
+        try
+        {
+            if (usuario.Estado == EstadoUsuario.Activo)
+            {
+                await UsuarioService.DesactivarUsuarioAsync(usuario.Id);
+            }
+            else
+            {
+                await UsuarioService.ActivarUsuarioAsync(usuario.Id);
+            }
+            await LoadData(); // refresh list
+        }
+        catch
+        {
+            // Error handling
+        }
+    }
+
+    private string GetRoleName(Guid rolId)
+    {
+        var rol = roles.FirstOrDefault(r => r.Id == rolId);
+        return rol?.Nombre ?? "Desconocido";
+    }
+}
+
+<div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-950">
+    <div class="mx-auto max-w-6xl">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Gestión de Usuarios</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Administre los usuarios y sus roles de acceso al sistema.</p>
+            </div>
+            <Button @onclick="OpenNewUserModal">
+                <LeftIcon>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </LeftIcon>
+                <ChildContent>
+                    Nuevo Usuario
+                </ChildContent>
+            </Button>
+        </div>
+
+        <Card>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-900 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-medium">Nombre</th>
+                            <th scope="col" class="px-6 py-4 font-medium">Correo</th>
+                            <th scope="col" class="px-6 py-4 font-medium">Rol</th>
+                            <th scope="col" class="px-6 py-4 font-medium">Estado</th>
+                            <th scope="col" class="px-6 py-4 font-medium text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                        @if (isLoading)
+                        {
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    Cargando usuarios...
+                                </td>
+                            </tr>
+                        }
+                        else if (!usuarios.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    No hay usuarios registrados.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var u in usuarios)
+                            {
+                                <tr class="bg-white hover:bg-gray-50 dark:bg-gray-950 dark:hover:bg-gray-900/50 transition-colors">
+                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">@u.Nombre</td>
+                                    <td class="px-6 py-4">@u.Correo</td>
+                                    <td class="px-6 py-4">@GetRoleName(u.RolId)</td>
+                                    <td class="px-6 py-4">
+                                        @if (u.Estado == EstadoUsuario.Activo)
+                                        {
+                                            <Badge Variant="success">Activo</Badge>
+                                        }
+                                        else
+                                        {
+                                            <Badge Variant="danger">Inactivo</Badge>
+                                        }
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <Button Variant="ghost" Size="sm" @onclick="() => ToggleEstado(u)">
+                                            @(u.Estado == EstadoUsuario.Activo ? "Desactivar" : "Activar")
+                                        </Button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </Card>
+    </div>
+</div>
+
+<Modal @bind-IsOpen="isModalOpen" Title="Nuevo Usuario">
+    <EditForm Model="newUser" OnValidSubmit="HandleSubmit" class="space-y-4">
+        <DataAnnotationsValidator />
+
+        <Input Label="Nombre Completo"
+               placeholder="Ej. Juan Pérez"
+               @bind-Value="newUser.Nombre" />
+        <ValidationMessage For="@(() => newUser.Nombre)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+
+        <Input Label="Correo Electrónico"
+               Type="email"
+               placeholder="correo@empresa.com"
+               @bind-Value="newUser.Correo" />
+        <ValidationMessage For="@(() => newUser.Correo)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+
+        <div class="relative">
+            <Input Label="Contraseña Temporal"
+                   Type="@PasswordType"
+                   placeholder="••••••••"
+                   @bind-Value="newUser.Password" />
+
+            <button type="button"
+                    @onclick="() => showPassword = !showPassword"
+                    class="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                @if (showPassword)
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
+                }
+                else
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                }
+            </button>
+        </div>
+        <ValidationMessage For="@(() => newUser.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
+            <select @bind="newUser.RolId" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                @if (roles == null || !roles.Any())
+                {
+                    <option value="@Guid.Empty" disabled>Cargando roles...</option>
+                }
+                else
+                {
+                    <option value="@Guid.Empty" disabled>Seleccione un rol...</option>
+                    @foreach (var rol in roles)
+                    {
+                        <option value="@rol.Id">@rol.Nombre</option>
+                    }
+                }
+            </select>
+            <ValidationMessage For="@(() => newUser.RolId)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                @error
+            </div>
+        }
+
+        <div class="mt-6 flex justify-end space-x-3">
+            <Button Variant="outline" @onclick="() => isModalOpen = false" Type="button">Cancelar</Button>
+            <Button Type="submit" IsLoading="isSubmitting">Guardar Usuario</Button>
+        </div>
+    </EditForm>
+</Modal>

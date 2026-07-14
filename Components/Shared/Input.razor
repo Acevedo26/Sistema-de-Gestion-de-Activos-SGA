@@ -1,0 +1,60 @@
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public RenderFragment? LeftIcon { get; set; }
+    [Parameter] public RenderFragment? RightIcon { get; set; }
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Type { get; set; } = "text";
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public System.Linq.Expressions.Expression<Func<string>>? ValueExpression { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string InputId => !string.IsNullOrEmpty(Id)
+        ? Id
+        : !string.IsNullOrEmpty(Label)
+            ? Label.ToLowerInvariant().Replace(" ", "-")
+            : Guid.NewGuid().ToString("N")[..8];
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}
+
+<div class="w-full">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label for="@InputId" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            @Label
+        </label>
+    }
+    <div class="relative">
+        @if (LeftIcon != null)
+        {
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+                @LeftIcon
+            </div>
+        }
+        <input id="@InputId"
+               type="@Type"
+               value="@Value"
+               @oninput="OnInputChanged"
+               class="@($"flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 {(LeftIcon != null ? "pl-10" : "")} {(RightIcon != null ? "pr-10" : "")} {(!string.IsNullOrEmpty(Error) ? "border-red-500 focus:ring-red-500 dark:border-red-500" : "")} {Class}")"
+               @attributes="AdditionalAttributes" />
+        @if (RightIcon != null)
+        {
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400">
+                @RightIcon
+            </div>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <p class="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            @Error
+        </p>
+    }
+</div>
