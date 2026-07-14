@@ -16,7 +16,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
         public Task EnviarCorreoRecuperacionAsync(string destinatario, string enlaceRecuperacion)
         {
-            string mensaje = $"\n--- MOCK EMAIL SENDER ---\nPara: {destinatario}\nAsunto: Recuperación de contraseña\nEnlace: {enlaceRecuperacion}\n-------------------------\n";
+            string mensaje = $"\nCorreo Enviado a: {destinatario}\nAsunto: Recuperación de contraseña\nEnlace: {enlaceRecuperacion}\n";
             _logger.LogInformation(mensaje);
             Debug.WriteLine(mensaje);
             

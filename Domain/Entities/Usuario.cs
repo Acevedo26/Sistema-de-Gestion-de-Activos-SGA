@@ -4,9 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Sistema_de_Gestion_de_Activos.Domain.Enums;
 
-// <summary>
-// Entidad Usuario
-// </summary>
 namespace Sistema_de_Gestion_de_Activos.Domain.Entities
 {
     [Table("usuarios")]

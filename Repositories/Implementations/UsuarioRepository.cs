@@ -19,7 +19,7 @@ namespace Sistema_de_Gestion_de_Activos.Repositories.Implementations
 
         public async Task<Usuario?> ObtenerPorCorreoAsync(string correo)
         {
-            return await _dbSet.FirstOrDefaultAsync(u => u.Correo == correo);
+            return await _dbSet.Include(u => u.Rol).FirstOrDefaultAsync(u => u.Correo == correo);
         }
     }
 }

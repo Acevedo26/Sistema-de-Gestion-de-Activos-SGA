@@ -16,22 +16,10 @@ namespace Sistema_de_Gestion_de_Activos.Data
         // ──────────────────────────────────────────────
         // DbSets (Tablas)
         // ──────────────────────────────────────────────
-        public DbSet<Rol> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Rol> Roles { get; set; }
         public DbSet<TokenRecuperacion> TokensRecuperacion { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
-        
-        // --- SE COMENTAN MÓDULOS AJENOS (Usuario solo implementará gestión de usuarios) ---
-        // public DbSet<ParametroSistema> ParametrosSistema { get; set; }
-        // public DbSet<Categoria> Categorias { get; set; }
-        // public DbSet<Ubicacion> Ubicaciones { get; set; }
-        // public DbSet<Activo> Activos { get; set; }
-        // public DbSet<Depreciacion> Depreciaciones { get; set; }
-        // public DbSet<HistorialDepreciacion> HistorialDepreciaciones { get; set; }
-        // public DbSet<Movimiento> Movimientos { get; set; }
-        // public DbSet<Mantenimiento> Mantenimientos { get; set; }
-        // public DbSet<ProgramaMantenimiento> ProgramasMantenimiento { get; set; }
-        // public DbSet<Notificacion> Notificaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -31,7 +31,7 @@ builder.Services.AddDbContext<SgaDbContext>((sp, options) =>
 });
 
 // 3. Inyección de Dependencias (Repositorios y Servicios)
-// Repositorio genérico (útil para operaciones base)
+// Repositorio genérico 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Repositorio y Servicio específicos de Usuario
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -102,6 +102,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Registrar Custom AuthenticationStateProvider para Blazor
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider, Sistema_de_Gestion_de_Activos.Providers.CustomAuthStateProvider>();
+
 // 4.1 Configurar Políticas de Autorización basadas en Roles (RF-17)
 builder.Services.AddAuthorization(options =>
 {
@@ -124,9 +128,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<SgaDbContext>();
-    // Asegura que la base de datos sea creada (si no se usan migraciones explícitas, esto la crea en base al modelo actual)
-    // Para entornos reales con migraciones usar dbContext.Database.Migrate();
     dbContext.Database.EnsureCreated();
+    
+    DbInitializer.Initialize(dbContext);
 }
 
 // Configure the HTTP request pipeline.
@@ -136,7 +140,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGA API v1"));
 }
 
-app.UseAuthentication(); // Debe ir antes de Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
