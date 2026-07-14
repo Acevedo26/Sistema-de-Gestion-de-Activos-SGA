@@ -30,10 +30,10 @@
             }
         }
     </script>
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 </head>
 <body class="bg-gray-50 text-gray-950 antialiased dark:bg-gray-950 dark:text-gray-50">
-    <Routes @rendermode="InteractiveServer" />
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>

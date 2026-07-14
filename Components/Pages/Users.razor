@@ -2,6 +2,7 @@
 @layout Layout._Layout
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
+@using Microsoft.AspNetCore.Components.Authorization
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
 
 @code {
@@ -60,7 +61,7 @@
         {
             await UsuarioService.CrearUsuarioAsync(newUser);
             isModalOpen = false;
-            await LoadData(); // refresh list
+            await LoadData();
         }
         catch (Exception ex)
         {
@@ -84,7 +85,7 @@
             {
                 await UsuarioService.ActivarUsuarioAsync(usuario.Id);
             }
-            await LoadData(); // refresh list
+            await LoadData();
         }
         catch
         {
@@ -98,6 +99,10 @@
         return rol?.Nombre ?? "Desconocido";
     }
 }
+
+<CascadingAuthenticationState>
+<AuthorizeView Roles="Administrador">
+    <Authorized>
 
 <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-950">
     <div class="mx-auto max-w-6xl">
@@ -177,6 +182,18 @@
         </Card>
     </div>
 </div>
+
+    </Authorized>
+    <NotAuthorized>
+        <div class="flex min-h-screen items-center justify-center p-6 text-center">
+            <div>
+                <h2 class="text-xl font-semibold text-red-600">Acceso Denegado</h2>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">No tienes los permisos necesarios para ver esta página.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+</CascadingAuthenticationState>
 
 <Modal @bind-IsOpen="isModalOpen" Title="Nuevo Usuario">
     <EditForm Model="newUser" OnValidSubmit="HandleSubmit" class="space-y-4">

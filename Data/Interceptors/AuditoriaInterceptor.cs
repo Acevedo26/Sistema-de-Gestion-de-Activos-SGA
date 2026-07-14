@@ -99,7 +99,7 @@ namespace Sistema_de_Gestion_de_Activos.Data.Interceptors
 
             foreach (var property in entry.Properties)
             {
-                if (property.IsTemporary) continue; // Ignorar claves generadas que aún no existen
+                if (property.IsTemporary) continue; 
 
                 string propName = property.Metadata.Name;
 

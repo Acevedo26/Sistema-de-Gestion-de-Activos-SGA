@@ -61,7 +61,6 @@ namespace Sistema_de_Gestion_de_Activos.Services
             await _tokenRepository.AddAsync(tokenEntity);
             await _tokenRepository.SaveChangesAsync();
 
-            // Despachar correo (usando dominio desde appsettings si existiera, o genérico)
             string appUrl = _configuration["AppUrl"] ?? "http://localhost:5000";
             string enlace = $"{appUrl}/auth/restablecer?token={rawToken}";
             
@@ -93,9 +92,21 @@ namespace Sistema_de_Gestion_de_Activos.Services
             tokenEntity.Utilizado = true;
             _tokenRepository.Update(tokenEntity);
 
-            await _usuarioRepository.SaveChangesAsync(); // Nota: Asume que comparten el mismo DbContext y SaveChangesAsync guarda ambos
+            await _usuarioRepository.SaveChangesAsync(); 
 
             return true;
+        }
+
+        public async Task<Usuario?> ValidarCredencialesAsync(string correo, string password)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorCorreoAsync(correo);
+            if (usuario == null || usuario.Estado != Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoUsuario.Activo)
+            {
+                return null;
+            }
+
+            bool isValid = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
+            return isValid ? usuario : null;
         }
     }
 }

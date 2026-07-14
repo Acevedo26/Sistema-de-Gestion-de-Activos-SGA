@@ -7,7 +7,7 @@ namespace Sistema_de_Gestion_de_Activos.Domain.Enums
     public enum EstadoMantenimiento
     {
         Pendiente,
-        EnProgreso, // Se omite el espacio para validez en C#
+        EnProgreso, 
         Finalizado
     }
 }

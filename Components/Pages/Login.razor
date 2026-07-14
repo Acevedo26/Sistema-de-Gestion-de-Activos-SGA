@@ -1,7 +1,8 @@
 @page "/login"
 @layout Layout._Layout
 @inject NavigationManager Navigation
-@inject HttpClient Http
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAuthService AuthService
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
 
 @code {
     private bool showPassword = false;
@@ -32,12 +33,17 @@
 
         try
         {
-            // Ejemplo de llamada a API REST
-            // var response = await Http.PostAsJsonAsync("api/auth/login", new { email, password });
-            // if (!response.IsSuccessStatusCode) { error = "Credenciales inválidas."; return; }
-
-            await Task.Delay(1500); // Simula llamada
-            Navigation.NavigateTo("/dashboard");
+            var usuario = await AuthService.ValidarCredencialesAsync(email, password);
+            if (usuario != null)
+            {
+                var customAuthStateProvider = (Sistema_de_Gestion_de_Activos.Providers.CustomAuthStateProvider)AuthStateProvider;
+                await customAuthStateProvider.MarkUserAsAuthenticated(usuario);
+                Navigation.NavigateTo("/dashboard");
+            }
+            else
+            {
+                error = "Correo o contraseña incorrectos, o la cuenta está inactiva.";
+            }
         }
         catch (Exception ex)
         {
