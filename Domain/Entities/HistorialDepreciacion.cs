@@ -11,27 +11,27 @@ namespace Sistema_de_Gestion_de_Activos.Domain.Entities
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Required(ErrorMessage = "La depreciación asociada es obligatoria.")]
+        [Required]
         [Column("depreciacion_id")]
         public Guid DepreciacionId { get; set; }
 
-        [Required(ErrorMessage = "La fecha de consulta es obligatoria.")]
+        [Required]
         [Column("fecha_consulta")]
         public DateTime FechaConsulta { get; set; }
 
-        [Required(ErrorMessage = "El valor actual es obligatorio.")]
+        [Required]
         [Column("valor_actual", TypeName = "decimal(18,2)")]
         public decimal ValorActual { get; set; }
 
-        [Required(ErrorMessage = "El valor residual es obligatorio.")]
+        [Required]
         [Column("valor_residual", TypeName = "decimal(18,2)")]
         public decimal ValorResidual { get; set; }
 
-        [Required(ErrorMessage = "El porcentaje consumido es obligatorio.")]
+        [Required]
         [Column("porcentaje_consumido", TypeName = "decimal(5,2)")]
         public decimal PorcentajeConsumido { get; set; }
 
-        [Required(ErrorMessage = "La depreciación acumulada es obligatoria.")]
+        [Required]
         [Column("depreciacion_acumulada", TypeName = "decimal(18,2)")]
         public decimal DepreciacionAcumulada { get; set; }
 

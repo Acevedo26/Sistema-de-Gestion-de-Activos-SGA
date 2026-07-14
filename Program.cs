@@ -9,6 +9,7 @@ using Sistema_de_Gestion_de_Activos.Services;
 using Sistema_de_Gestion_de_Activos.Repositories.Interfaces;
 using Sistema_de_Gestion_de_Activos.Repositories.Implementations;
 using Sistema_de_Gestion_de_Activos.Domain.Enums;
+using Sistema_de_Gestion_de_Activos.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,14 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IEmailService, EmailServiceMock>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+
+// Servicios del Módulo 6 — Depreciación
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IDepreciacionService, DepreciacionService>();
+builder.Services.AddScoped<IHistorialDepreciacionService, HistorialDepreciacionService>();
+builder.Services.AddScoped<IReporteDepreciacionService, ReporteDepreciacionService>();
+// builder.Services.AddScoped<IExportacionContableService, ExportacionContableService>();
+builder.Services.AddScoped<IAnalisisIntegradoService, AnalisisIntegradoService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -121,6 +130,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("SoloLecturaPolicy", policy => 
         policy.RequireRole(nameof(NombreRol.Administrador), nameof(NombreRol.Gestor), nameof(NombreRol.Tecnico), nameof(NombreRol.Visualizador)));
 });
+
+// Background Jobs — Módulo 6
+builder.Services.AddHostedService<DepreciacionDailyJob>();
+builder.Services.AddHostedService<SnapshotMensualJob>();
 
 var app = builder.Build();
 
