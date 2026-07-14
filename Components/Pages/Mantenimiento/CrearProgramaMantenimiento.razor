@@ -1,0 +1,139 @@
+﻿@page "/mantenimiento/programas/crear"
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@using Sistema_de_Gestion_de_Activos.Data
+@using Microsoft.EntityFrameworkCore
+@inject IProgramaMantenimientoService ProgramaService
+@inject SgaDbContext DbContext
+@inject NavigationManager Navigation
+
+<PageTitle>Nuevo Programa de Mantenimiento</PageTitle>
+
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center gap-2 mb-6">
+        <a href="/mantenimiento/programas" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-0">Nuevo Programa de Mantenimiento Preventivo</h4>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-3 rounded text-sm dark:bg-red-900/30 dark:border-red-500 dark:text-red-200">
+                @error
+            </div>
+        }
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Activo</label>
+            <select class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="modelo.ActivoId">
+                <option value="">Seleccione un activo</option>
+                @if (activos != null)
+                {
+                    @foreach (var a in activos)
+                    {
+                        <option value="@a.Id">@a.Codigo - @a.Descripcion</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título del programa</label>
+            <input type="text" placeholder="Ej: Mantenimiento preventivo de aires acondicionados"
+                   class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="modelo.Titulo" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frecuencia</label>
+            <select class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="modelo.FrecuenciaDias">
+                <option value="30">Mensual</option>
+                <option value="90">Trimestral</option>
+                <option value="180">Semestral</option>
+                <option value="365">Anual</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Próxima fecha programada</label>
+            <input type="date" class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="proximaFecha" @bind:format="yyyy-MM-dd" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Técnico asignado (opcional)</label>
+            <select class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="tecnicoAsignadoTexto">
+                <option value="">Sin asignar</option>
+                @if (usuarios != null)
+                {
+                    @foreach (var u in usuarios)
+                    {
+                        <option value="@u.Id">@u.Nombre</option>
+                    }
+                }
+            </select>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Si asignas un técnico, el sistema podrá generar automáticamente la orden de mantenimiento cuando venza la fecha.
+            </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+            <a href="/mantenimiento/programas" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                Cancelar
+            </a>
+            <button type="button" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700" @onclick="Guardar">
+                Guardar
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Activo>? activos;
+    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Usuario>? usuarios;
+    private ProgramaMantenimientoCreateDto modelo = new() { FrecuenciaDias = 30 };
+    private DateTime proximaFecha = DateTime.Today.AddDays(30);
+    private string tecnicoAsignadoTexto = string.Empty;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        activos = await DbContext.Activos.OrderBy(a => a.Codigo).ToListAsync();
+        usuarios = await DbContext.Usuarios.OrderBy(u => u.Nombre).ToListAsync();
+    }
+
+    private async Task Guardar()
+    {
+        error = null;
+
+        if (modelo.ActivoId == Guid.Empty)
+        {
+            error = "Debe seleccionar un activo.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(modelo.Titulo))
+        {
+            error = "El título es obligatorio.";
+            return;
+        }
+
+        modelo.ProximaFecha = proximaFecha;
+        modelo.TecnicoAsignadoId = string.IsNullOrEmpty(tecnicoAsignadoTexto)
+            ? null
+            : Guid.Parse(tecnicoAsignadoTexto);
+
+        try
+        {
+            await ProgramaService.CrearAsync(modelo);
+            Navigation.NavigateTo("/mantenimiento/programas");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}
