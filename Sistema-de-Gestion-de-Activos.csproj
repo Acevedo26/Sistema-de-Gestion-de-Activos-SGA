@@ -29,9 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Application\DTOs\" />
+    <Folder Include="Application\Interfaces\" />
+    <Folder Include="Controllers\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Data\" />
     <Folder Include="Domain\Enums\" />
+    <Folder Include="Services\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 
