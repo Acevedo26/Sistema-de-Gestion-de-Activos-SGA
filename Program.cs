@@ -53,6 +53,10 @@ builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<IMantenimientoService, MantenimientoService>();
 builder.Services.AddScoped<IProgramaMantenimientoService, ProgramaMantenimientoService>();
 
+// Servicios del Módulo 4 — Reportes y Análisis
+builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
+builder.Services.AddScoped<IReporteMantenimientoAnalisisService, ReporteMantenimientoAnalisisService>();
+
 // Servicios del Módulo 6 — Depreciación
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IDepreciacionService, DepreciacionService>();
