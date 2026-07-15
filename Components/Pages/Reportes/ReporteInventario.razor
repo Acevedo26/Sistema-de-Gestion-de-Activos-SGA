@@ -1,0 +1,236 @@
+﻿@page "/reportes/inventario"
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Reportes
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IReporteInventarioService ReporteService
+@inject ICategoriaService CategoriaService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Reporte de Inventario</PageTitle>
+
+<div class="mb-6">
+    <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Reporte de Inventario</h4>
+</div>
+
+<!-- Pestañas -->
+<div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+        <button @onclick="() => vistaActiva = 1" class="@(vistaActiva == 1 ? "border-primary-500 text-primary-600 dark:text-primary-400" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400") whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+            Inventario General
+        </button>
+        <button @onclick="CargarPorUbicacionSiNecesario" class="@(vistaActiva == 2 ? "border-primary-500 text-primary-600 dark:text-primary-400" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400") whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+            Por Ubicación
+        </button>
+    </nav>
+</div>
+
+@if (vistaActiva == 1)
+{
+    <!-- Filtros -->
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                <select @bind="categoriaIdStr" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm">
+                    <option value="">Todas</option>
+                    @if (categorias != null)
+                    {
+                        foreach (var cat in categorias)
+                        {
+                            <option value="@cat.Id.ToString()">@cat.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
+                <select @bind="estadoFiltro" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm">
+                    <option value="">Todos</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Mantenimiento">En Mantenimiento</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="Baja">Baja</option>
+                    <option value="Descartado">Descartado</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2 pb-2">
+                <input type="checkbox" id="incluirDep" @bind="incluirDepreciacion" class="rounded border-gray-300 text-primary-600" />
+                <label for="incluirDep" class="text-sm text-gray-700 dark:text-gray-300">Incluir depreciación</label>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-800 dark:bg-gray-700 rounded-md hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors" @onclick="CargarReporte">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filtrar
+            </button>
+            <button type="button" @onclick="ExportarExcel" title="Exportar a Excel" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 rounded-md hover:bg-green-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Excel
+            </button>
+            <button type="button" @onclick="ExportarPdf" title="Exportar a PDF" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 rounded-md hover:bg-red-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-semibold text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-6 py-4">Código</th>
+                        <th class="px-6 py-4">Descripción</th>
+                        <th class="px-6 py-4">Categoría</th>
+                        <th class="px-6 py-4">Estado</th>
+                        <th class="px-6 py-4">Ubicación</th>
+                        <th class="px-6 py-4">Responsable</th>
+                        <th class="px-6 py-4 text-right">Valor</th>
+                        @if (incluirDepreciacion)
+                        {
+                            <th class="px-6 py-4 text-right">Valor Actual</th>
+                            <th class="px-6 py-4 text-center">% Consumido</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @if (items != null)
+                    {
+                        @foreach (var item in items)
+                        {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@item.Codigo</td>
+                                <td class="px-6 py-4">@item.Descripcion</td>
+                                <td class="px-6 py-4">@item.Categoria</td>
+                                <td class="px-6 py-4">@item.Estado</td>
+                                <td class="px-6 py-4">@item.Ubicacion</td>
+                                <td class="px-6 py-4 text-gray-400 italic">@item.Responsable</td>
+                                <td class="px-6 py-4 text-right">@item.Valor.ToString("C")</td>
+                                @if (incluirDepreciacion)
+                                {
+                                    <td class="px-6 py-4 text-right text-primary-600 dark:text-primary-400">@item.ValorActual?.ToString("C")</td>
+                                    <td class="px-6 py-4 text-center">@item.PorcentajeConsumido?.ToString("0.0")%</td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Mostrando <strong>@(items?.Count ?? 0)</strong> activos</span>
+            <nav class="inline-flex shadow-sm rounded-md -space-x-px" aria-label="Pagination">
+                <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span class="sr-only">Anterior</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                </button>
+                <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span class="sr-only">Siguiente</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </button>
+            </nav>
+        </div>
+    </div>
+}
+else
+{
+    <!-- RF-14: Reporte de Activos por Ubicación -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @if (porUbicacion != null)
+        {
+            @foreach (var u in porUbicacion)
+            {
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+                    <h5 class="font-bold text-gray-900 dark:text-white mb-1">@u.Departamento @(!string.IsNullOrEmpty(u.Oficina) ? $"- {u.Oficina}" : "")</h5>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">@u.Edificio</p>
+                    <div class="flex justify-between text-sm mb-3">
+                        <span class="text-gray-500 dark:text-gray-400">Activos:</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">@u.CantidadActivos</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">Valor total:</span>
+                        <span class="font-semibold text-primary-600 dark:text-primary-400">@u.ValorTotal.ToString("C")</span>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    private List<ReporteInventarioItemDto>? items;
+    private List<ReporteUbicacionDto>? porUbicacion;
+    private IEnumerable<Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion.CategoriaResponseDto>? categorias;
+
+    private string categoriaIdStr = "";
+    private string estadoFiltro = "";
+    private bool incluirDepreciacion = false;
+    private int vistaActiva = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriaService.ObtenerTodasAsync();
+        await CargarReporte();
+    }
+
+    private async Task CargarReporte()
+    {
+        vistaActiva = 1;
+        Guid? catId = string.IsNullOrEmpty(categoriaIdStr) ? null : Guid.Parse(categoriaIdStr);
+        string? estado = string.IsNullOrEmpty(estadoFiltro) ? null : estadoFiltro;
+
+        var filtro = new ReporteInventarioFiltroDto
+        {
+            CategoriaId = catId,
+            Estado = estado,
+            IncluirDepreciacion = incluirDepreciacion
+        };
+
+        var resultado = await ReporteService.GenerarReporteInventarioAsync(filtro);
+        items = resultado.ToList();
+    }
+
+    private async Task CargarPorUbicacionSiNecesario()
+    {
+        vistaActiva = 2;
+        if (porUbicacion == null)
+        {
+            var resultado = await ReporteService.GenerarReportePorUbicacionAsync();
+            porUbicacion = resultado.ToList();
+        }
+    }
+
+    private ReporteInventarioFiltroDto ConstruirFiltroActual()
+    {
+        Guid? catId = string.IsNullOrEmpty(categoriaIdStr) ? null : Guid.Parse(categoriaIdStr);
+        string? estado = string.IsNullOrEmpty(estadoFiltro) ? null : estadoFiltro;
+
+        return new ReporteInventarioFiltroDto
+        {
+            CategoriaId = catId,
+            Estado = estado,
+            IncluirDepreciacion = incluirDepreciacion
+        };
+    }
+
+    private async Task ExportarExcel()
+    {
+        var bytes = await ReporteService.ExportarInventarioExcelAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Inventario.xlsx", base64);
+    }
+
+    private async Task ExportarPdf()
+    {
+        var bytes = await ReporteService.ExportarInventarioPdfAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Inventario.pdf", base64);
+    }
+
+    private async Task ExportarCsv()
+    {
+        var bytes = await ReporteService.ExportarInventarioCsvAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Inventario.csv", base64);
+    }
+}

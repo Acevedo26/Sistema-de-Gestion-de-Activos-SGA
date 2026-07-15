@@ -198,10 +198,28 @@ namespace Sistema_de_Gestion_de_Activos.Data
 				.OnDelete(DeleteBehavior.Restrict);
 
 			modelBuilder.Entity<ProgramaMantenimiento>()
-                .HasOne(p => p.TecnicoAsignado)
-                .WithMany()
-                .HasForeignKey(p => p.TecnicoAsignadoId)
-                .OnDelete(DeleteBehavior.Restrict);
+				.HasOne(p => p.TecnicoAsignado)
+				.WithMany()
+				.HasForeignKey(p => p.TecnicoAsignadoId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Movimiento>()
+				.HasOne(m => m.Activo)
+				.WithMany()
+				.HasForeignKey(m => m.ActivoId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Movimiento>()
+				.HasOne(m => m.UbicacionOrigen)
+				.WithMany()
+				.HasForeignKey(m => m.UbicacionOrigenId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Movimiento>()
+				.HasOne(m => m.UbicacionDestino)
+				.WithMany()
+				.HasForeignKey(m => m.UbicacionDestinoId)
+				.OnDelete(DeleteBehavior.Restrict);
 		}
-    }
+	}
 }

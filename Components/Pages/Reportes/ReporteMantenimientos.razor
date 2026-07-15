@@ -1,0 +1,337 @@
+﻿@page "/reportes/mantenimientos"
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Reportes
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IReporteMantenimientoAnalisisService ReporteService
+@inject ICategoriaService CategoriaService
+@inject IUsuarioService UsuarioService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Reporte de Mantenimientos</PageTitle>
+
+<div class="mb-6">
+    <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Reporte de Mantenimientos</h4>
+</div>
+
+<div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+        <button @onclick="() => vistaActiva = 1" class="@(vistaActiva == 1 ? "border-primary-500 text-primary-600 dark:text-primary-400" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400") whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+            Detalle de Mantenimientos
+        </button>
+        <button @onclick="CargarAnalisisSiNecesario" class="@(vistaActiva == 2 ? "border-primary-500 text-primary-600 dark:text-primary-400" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400") whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+            Análisis de Costos
+        </button>
+    </nav>
+</div>
+
+@if (vistaActiva == 1)
+{
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desde</label>
+                <input type="date" @bind="desde" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hasta</label>
+                <input type="date" @bind="hasta" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                <select @bind="categoriaIdStr" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm">
+                    <option value="">Todas</option>
+                    @if (categorias != null)
+                    {
+                        foreach (var cat in categorias)
+                        {
+                            <option value="@cat.Id.ToString()">@cat.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Técnico</label>
+                <select @bind="tecnicoIdStr" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm">
+                    <option value="">Todos</option>
+                    @if (tecnicos != null)
+                    {
+                        foreach (var t in tecnicos)
+                        {
+                            <option value="@t.Id.ToString()">@t.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-800 dark:bg-gray-700 rounded-md hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors" @onclick="CargarReporte">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filtrar
+            </button>
+            <button type="button" @onclick="ExportarExcel" title="Exportar a Excel" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 rounded-md hover:bg-green-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Excel
+            </button>
+            <button type="button" @onclick="ExportarPdf" title="Exportar a PDF" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 rounded-md hover:bg-red-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-semibold text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-6 py-4">Activo</th>
+                        <th class="px-6 py-4">Tipo</th>
+                        <th class="px-6 py-4">Técnico</th>
+                        <th class="px-6 py-4">Fecha Inicio</th>
+                        <th class="px-6 py-4">Estado</th>
+                        <th class="px-6 py-4 text-right">Costo</th>
+                        <th class="px-6 py-4 text-center">Costo/Valor</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @if (items != null)
+                    {
+                        @foreach (var item in items)
+                        {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-gray-900 dark:text-white">@item.CodigoActivo</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">@item.DescripcionActivo</div>
+                                </td>
+                                <td class="px-6 py-4">@item.Tipo</td>
+                                <td class="px-6 py-4">@item.Tecnico</td>
+                                <td class="px-6 py-4">@item.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                <td class="px-6 py-4">@item.Estado</td>
+                                <td class="px-6 py-4 text-right font-medium">@item.Costo.ToString("C")</td>
+                                <td class="px-6 py-4 text-center @(item.RelacionCostoValor > 30 ? "text-red-600 font-semibold" : "text-gray-600")">
+                                    @item.RelacionCostoValor.ToString("0.0")%
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Mostrando <strong>@(items?.Count ?? 0)</strong> mantenimientos</span>
+            <nav class="inline-flex shadow-sm rounded-md -space-x-px" aria-label="Pagination">
+                <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span class="sr-only">Anterior</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                </button>
+                <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <span class="sr-only">Siguiente</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </button>
+            </nav>
+        </div>
+    </div>
+}
+else
+{
+    <!-- RF-15: Análisis de Costos de Mantenimiento -->
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desde</label>
+                <input type="date" @bind="desdeAnalisis" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hasta</label>
+                <input type="date" @bind="hastaAnalisis" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                <select @bind="categoriaIdStr" class="w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 text-sm">
+                    <option value="">Todas</option>
+                    @if (categorias != null)
+                    {
+                        foreach (var cat in categorias)
+                        {
+                            <option value="@cat.Id.ToString()">@cat.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-800 dark:bg-gray-700 rounded-md hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors" @onclick="CargarAnalisis">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Aplicar
+            </button>
+        </div>
+    </div>
+
+    @if (analisis != null)
+    {
+        <div class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/50 rounded-xl p-4 mb-6 text-sm text-yellow-800 dark:text-yellow-300">
+            Umbral de costo excesivo configurado: <strong>@analisis.UmbralCostoExcesivo.ToString("0.0")%</strong> del valor actual del activo.
+            Período: <strong>@desdeAnalisis.ToString("dd/MM/yyyy")</strong> — <strong>@hastaAnalisis.ToString("dd/MM/yyyy")</strong>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h5 class="font-bold text-gray-900 dark:text-white">Costos por Activo</h5>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase font-semibold text-gray-700 dark:text-gray-200">
+                        <tr>
+                            <th class="px-6 py-3">Activo</th>
+                            <th class="px-6 py-3">Categoría</th>
+                            <th class="px-6 py-3 text-center"># Mant.</th>
+                            <th class="px-6 py-3 text-right">Costo Total</th>
+                            <th class="px-6 py-3 text-right">Valor Actual</th>
+                            <th class="px-6 py-3 text-center">Relación</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach (var a in analisis.PorActivo)
+                        {
+                            <tr class="@(a.CostoExcesivo ? "bg-red-50 dark:bg-red-900/10" : "")">
+                                <td class="px-6 py-3">
+                                    <div class="font-medium text-gray-900 dark:text-white">@a.Codigo</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">@a.Descripcion</div>
+                                </td>
+                                <td class="px-6 py-3">@a.Categoria</td>
+                                <td class="px-6 py-3 text-center">@a.CantidadMantenimientos</td>
+                                <td class="px-6 py-3 text-right">@a.CostoTotalMantenimiento.ToString("C")</td>
+                                <td class="px-6 py-3 text-right">@a.ValorActual.ToString("C")</td>
+                                <td class="px-6 py-3 text-center">
+                                    <span class="@(a.CostoExcesivo ? "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200" : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300") inline-flex px-2 py-0.5 rounded text-xs font-medium">
+                                        @a.RelacionCostoValor.ToString("0.0")%
+                                        @(a.CostoExcesivo ? " — Considerar reemplazo" : "")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h5 class="font-bold text-gray-900 dark:text-white">Costos por Categoría</h5>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase font-semibold text-gray-700 dark:text-gray-200">
+                        <tr>
+                            <th class="px-6 py-3">Categoría</th>
+                            <th class="px-6 py-3 text-center">Activos</th>
+                            <th class="px-6 py-3 text-right">Costo Total</th>
+                            <th class="px-6 py-3 text-right">Promedio por Activo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach (var c in analisis.PorCategoria)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">@c.Categoria</td>
+                                <td class="px-6 py-3 text-center">@c.CantidadActivos</td>
+                                <td class="px-6 py-3 text-right">@c.CostoTotalMantenimiento.ToString("C")</td>
+                                <td class="px-6 py-3 text-right">@c.CostoPromedioPorActivo.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<ReporteMantenimientoItemDto>? items;
+    private AnalisisCostoMantenimientoResultDto? analisis;
+    private IEnumerable<Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion.CategoriaResponseDto>? categorias;
+    private List<Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios.UsuarioResponseDto>? tecnicos;
+
+    private DateTime desde = DateTime.Today.AddMonths(-1);
+    private DateTime hasta = DateTime.Today;
+    private DateTime desdeAnalisis = DateTime.Today.AddMonths(-1);
+    private DateTime hastaAnalisis = DateTime.Today;
+    private string categoriaIdStr = "";
+    private string tecnicoIdStr = "";
+    private int vistaActiva = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriaService.ObtenerTodasAsync();
+
+        var usuarios = await UsuarioService.ObtenerTodosAsync();
+        var roles = await UsuarioService.ObtenerRolesAsync();
+        var rolTecnicoId = roles.FirstOrDefault(r => r.Nombre == "Tecnico")?.Id;
+
+        tecnicos = rolTecnicoId.HasValue
+            ? usuarios.Where(u => u.RolId == rolTecnicoId.Value).ToList()
+            : usuarios.ToList();
+
+        await CargarReporte();
+    }
+
+    private async Task CargarReporte()
+    {
+        vistaActiva = 1;
+        var filtro = new ReporteMantenimientoFiltroDto
+        {
+            Desde = desde,
+            Hasta = hasta,
+            CategoriaId = string.IsNullOrEmpty(categoriaIdStr) ? null : Guid.Parse(categoriaIdStr),
+            TecnicoId = string.IsNullOrEmpty(tecnicoIdStr) ? null : Guid.Parse(tecnicoIdStr)
+        };
+
+        var resultado = await ReporteService.GenerarReporteMantenimientosAsync(filtro);
+        items = resultado.ToList();
+    }
+
+    private async Task CargarAnalisisSiNecesario()
+    {
+        vistaActiva = 2;
+        if (analisis == null)
+        {
+            await CargarAnalisis();
+        }
+    }
+
+    private async Task CargarAnalisis()
+    {
+        Guid? catId = string.IsNullOrEmpty(categoriaIdStr) ? null : Guid.Parse(categoriaIdStr);
+        var resultado = await ReporteService.GenerarAnalisisCostosAsync(catId, desdeAnalisis, hastaAnalisis);
+        analisis = resultado;
+    }
+
+    private ReporteMantenimientoFiltroDto ConstruirFiltroActual()
+    {
+        return new ReporteMantenimientoFiltroDto
+        {
+            Desde = desde,
+            Hasta = hasta,
+            CategoriaId = string.IsNullOrEmpty(categoriaIdStr) ? null : Guid.Parse(categoriaIdStr),
+            TecnicoId = string.IsNullOrEmpty(tecnicoIdStr) ? null : Guid.Parse(tecnicoIdStr)
+        };
+    }
+
+    private async Task ExportarExcel()
+    {
+        var bytes = await ReporteService.ExportarMantenimientosExcelAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Mantenimientos.xlsx", base64);
+    }
+
+    private async Task ExportarPdf()
+    {
+        var bytes = await ReporteService.ExportarMantenimientosPdfAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Mantenimientos.pdf", base64);
+    }
+
+    private async Task ExportarCsv()
+    {
+        var bytes = await ReporteService.ExportarMantenimientosCsvAsync(ConstruirFiltroActual());
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", "Reporte_Mantenimientos.csv", base64);
+    }
+}
