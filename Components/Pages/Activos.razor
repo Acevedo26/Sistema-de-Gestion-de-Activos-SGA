@@ -108,7 +108,7 @@
                                 @if (openMenuId == asset.Id) {
                                     <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
                                         <a href="/activos/@asset.Id/depreciacion" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</a>
-                                        <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => { OpenEdit(asset); ToggleMenu(null); }">Editar</button>
+                                        <a href="/activos/editar/@asset.Id" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Editar</a>
                                         <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { confirmId = asset.Id; ToggleMenu(null); }">Eliminar</button>
                                     </div>
                                 }
@@ -141,24 +141,12 @@
 
 <!-- Botón Crear (Abajo derecha) -->
 <div class="mt-6 flex justify-end">
-    <button class="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors" @onclick="OpenCreate">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nuevo Activo
-    </button>
+    <a href="/activos/nuevo" class="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nuevo Activo</a>
 </div>
 
 <!-- Modals -->
-<Modal @bind-IsOpen="showForm" Title="@(editing is null ? "Nuevo activo" : "Editar activo")" Class="max-w-2xl">
-    <EditForm Model="form" OnValidSubmit="Save" class="grid grid-cols-1 gap-4 md:grid-cols-2"><DataAnnotationsValidator /><ValidationSummary />
-        @if (editing is null) { <div><label class="sga-label">Código</label><InputText class="sga-input" @bind-Value="form.Codigo" /></div> }
-        <div class="@(editing is null ? "" : "md:col-span-2")"><label class="sga-label">Descripción</label><InputText class="sga-input" @bind-Value="form.Descripcion" /></div>
-        <div><label class="sga-label">Categoría</label><InputSelect class="sga-input" @bind-Value="form.CategoriaId"><option value="@Guid.Empty">Seleccione una categoría</option>@foreach (var category in categories) { <option value="@category.Id">@category.Nombre</option> }</InputSelect></div>
-        <div><label class="sga-label">Ubicación (ID)</label><InputText class="sga-input" @bind-Value="locationText" placeholder="UUID de ubicación" /></div>
-        <div><label class="sga-label">Valor de adquisición</label><InputNumber class="sga-input" @bind-Value="form.CostoInicial" /></div><div><label class="sga-label">Fecha de adquisición</label><InputDate class="sga-input" @bind-Value="form.FechaAdquisicion" /></div>
-        <div><label class="sga-label">Proveedor</label><InputText class="sga-input" @bind-Value="form.Proveedor" /></div><div><label class="sga-label">Número de serie</label><InputText class="sga-input" @bind-Value="form.NumeroSerie" /></div>
-        @if (editing is not null) { <div><label class="sga-label">Estado</label><InputSelect class="sga-input" @bind-Value="editState">@foreach (var state in Enum.GetValues<EstadoActivo>()) { <option value="@state">@state</option> }</InputSelect></div> }
-        <div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => showForm = false">Cancelar</button><button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Guardar</button></div>
-    </EditForm>
-</Modal>
+
 <Modal @bind-IsOpen="showConfirm" Title="Confirmar baja"><p class="text-sm text-gray-600 dark:text-gray-300">El activo se desactivará y dejará de estar disponible para nuevas asignaciones.</p><div class="mt-6 flex justify-end gap-2"><button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => confirmId = null">Cancelar</button><button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="Deactivate">Dar de baja</button></div></Modal>
 
 @code {

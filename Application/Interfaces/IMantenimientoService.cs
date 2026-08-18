@@ -20,5 +20,7 @@ namespace Sistema_de_Gestion_de_Activos.Application.Interfaces
 
 		// Marca un mantenimiento en curso como finalizado
 		Task<MantenimientoResponseDto> FinalizarAsync(Guid id, MantenimientoFinalizarDto dto);
+
+        Task<bool> EliminarAsync(Guid id);
 	}
 }

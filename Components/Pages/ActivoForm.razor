@@ -1,0 +1,219 @@
+﻿@page "/activos/nuevo"
+@page "/activos/editar/{Id:guid}"
+@attribute [Authorize(Roles = "Administrador,Gestor")]
+@inject NavigationManager Navigation
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.ICategoriaService CategoriaService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
+@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
+@using Microsoft.EntityFrameworkCore
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
+
+<PageTitle>@(Id == null ? "Nuevo Activo" : "Editar Activo")</PageTitle>
+
+<div class="max-w-4xl mx-auto p-4 md:p-6">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-6">
+        <a href="/activos" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">@(Id == null ? "Nuevo Activo" : "Editar Activo")</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Complete la información para registrar un activo en el sistema.</p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 md:p-8">
+        <EditForm Model="form" OnValidSubmit="SaveAsync" class="space-y-8">
+            <DataAnnotationsValidator />
+            
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="rounded-md bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">@error</div>
+            }
+
+            <!-- Section 1 -->
+            <div>
+                <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-500 mb-6 border-b border-gray-100 dark:border-gray-800 pb-2">Información Básica</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Descripción del Activo <span class="text-red-500">*</span></label>
+                        <InputText @bind-Value="form.Descripcion" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" placeholder="Ej. Laptop Dell Latitude 5420" />
+                        <ValidationMessage For="@(() => form.Descripcion)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Categoría <span class="text-red-500">*</span></label>
+                        <InputSelect @bind-Value="form.CategoriaId" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                            <option value="@Guid.Empty">Seleccione una categoría</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.Id">@cat.Nombre</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => form.CategoriaId)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Número de Serie</label>
+                        <InputText @bind-Value="form.NumeroSerie" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" placeholder="Opcional" />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Código del Activo <span class="text-red-500">*</span></label>
+                        <InputText @bind-Value="form.Codigo" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" placeholder="Ej. ACT-001" disabled="@(Id != null)" />
+                        <ValidationMessage For="@(() => form.Codigo)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Ubicación <span class="text-red-500">*</span></label>
+                        <InputSelect @bind-Value="form.UbicacionId" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                            <option value="@Guid.Empty">Seleccione una ubicación</option>
+                            @foreach (var u in ubicaciones)
+                            {
+                                <option value="@u.Id">@($"{u.Edificio} - {u.Departamento} - {u.Oficina}")</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => form.UbicacionId)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Responsable</label>
+                        <InputSelect @bind-Value="form.ResponsableId" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                            <option value="">Sin asignar</option>
+                            @foreach (var r in responsables)
+                            {
+                                <option value="@r.Id">@r.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2 -->
+            <div>
+                <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-500 mb-6 border-b border-gray-100 dark:border-gray-800 pb-2">Información de Compra y Depreciación</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Fecha de Adquisición <span class="text-red-500">*</span></label>
+                        <InputDate @bind-Value="form.FechaAdquisicion" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" />
+                        <ValidationMessage For="@(() => form.FechaAdquisicion)" class="text-red-500 text-xs mt-1" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Proveedor</label>
+                        <InputText @bind-Value="form.Proveedor" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" placeholder="Buscar proveedor..." />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Costo Inicial <span class="text-red-500">*</span></label>
+                        <InputNumber @bind-Value="form.CostoInicial" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" placeholder="Ej. 450000" />
+                        <ValidationMessage For="@(() => form.CostoInicial)" class="text-red-500 text-xs mt-1" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
+                <a href="/activos" class="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Cancelar
+                </a>
+                <button type="submit" disabled="@isSubmitting" class="flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Guardar
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private ActivoRequestDto form = new() { FechaAdquisicion = DateTime.Today };
+    private Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoActivo? existingState;
+    private bool isSubmitting;
+    private string error = string.Empty;
+
+    private List<CategoriaResponseDto> categories = new();
+    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Ubicacion> ubicaciones = new();
+    private List<UsuarioResponseDto> responsables = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = (await CategoriaService.ObtenerTodasAsync()).ToList();
+        responsables = (await UsuarioService.ObtenerTodosAsync()).ToList();
+        ubicaciones = await DbContext.Ubicaciones.ToListAsync();
+
+        if (Id.HasValue)
+        {
+            var result = await ActivoService.ObtenerTodosAsync();
+            var existing = result.FirstOrDefault(a => a.Id == Id.Value);
+            if (existing != null)
+            {
+                form.Codigo = existing.Codigo;
+                form.Descripcion = existing.Descripcion;
+                form.CategoriaId = existing.CategoriaId;
+                form.UbicacionId = existing.UbicacionId;
+                form.FechaAdquisicion = existing.FechaAdquisicion;
+                form.CostoInicial = existing.CostoInicial;
+                form.Proveedor = existing.Proveedor;
+                form.NumeroSerie = existing.NumeroSerie;
+                form.ResponsableId = existing.ResponsableId;
+                existingState = existing.Estado;
+            }
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        error = string.Empty;
+        
+        if (form.CategoriaId == Guid.Empty)
+        {
+            error = "Seleccione una categoría válida.";
+            return;
+        }
+        if (form.UbicacionId == Guid.Empty)
+        {
+            error = "Seleccione una ubicación válida.";
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            if (Id.HasValue)
+            {
+                // Note: For Edit, we map to ActivoUpdateDto
+                var updateDto = new ActivoUpdateDto
+                {
+                    Descripcion = form.Descripcion,
+                    CategoriaId = form.CategoriaId,
+                    UbicacionId = form.UbicacionId,
+                    CostoInicial = form.CostoInicial,
+                    FechaAdquisicion = form.FechaAdquisicion,
+                    Proveedor = form.Proveedor,
+                    NumeroSerie = form.NumeroSerie,
+                    Estado = existingState, ResponsableId = form.ResponsableId
+                };
+                await ActivoService.ActualizarActivoAsync(Id.Value, updateDto);
+            }
+            else
+            {
+                await ActivoService.CrearActivoAsync(form);
+            }
+            Navigation.NavigateTo("/activos");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

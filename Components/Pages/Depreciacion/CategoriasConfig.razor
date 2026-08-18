@@ -74,8 +74,8 @@
                                     </div>
                                     @if (openMenuId == c.Id) {
                                         <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
-                                            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</button>
-                                            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => { CargarEdicion(c); ToggleMenu(null); }">Editar</button>
+                                            
+                                            <a href="/categorias/editar/@c.Id" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Editar</a>
                                             <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { categoriaAEliminar = c; mostrarEliminar = true; ToggleMenu(null); }">Eliminar</button>
                                         </div>
                                     }
@@ -123,9 +123,7 @@
 @if (EsAdmin)
 {
     <div class="mt-6 flex justify-end">
-        <button class="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors" @onclick="() => mostrarNueva = true">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nueva Categoría
-        </button>
+        <a href="/categorias/nueva" class="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nueva Categoría</a>
     </div>
 }
 
@@ -167,14 +165,7 @@
     </div>
 }
 
-<Modal @bind-IsOpen="mostrarNueva" Title="Nueva categoría">
-    <EditForm Model="nuevaCategoria" OnValidSubmit="GuardarNueva" class="space-y-4"><DataAnnotationsValidator /><ValidationSummary />
-        <div><label class="mb-1 block text-sm font-semibold">Nombre</label><InputText class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.Nombre" /></div>
-        <div><label class="mb-1 block text-sm font-semibold">Vida útil (años)</label><InputNumber class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.VidaUtil" /></div>
-        <div><label class="mb-1 block text-sm font-semibold">Valor residual</label><InputNumber class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.ValorResidual" /></div>
-        <div class="flex justify-end gap-2"><button type="button" class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => mostrarNueva = false">Cancelar</button><button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Guardar</button></div>
-    </EditForm>
-</Modal>
+
 
 <Modal @bind-IsOpen="mostrarEliminar" Title="Eliminar categoría"><p class="text-sm text-gray-600 dark:text-gray-300">¿Desea eliminar <strong>@categoriaAEliminar?.Nombre</strong>? Solo será posible si no tiene activos asociados.</p><div class="mt-6 flex justify-end gap-2"><button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => mostrarEliminar = false">Cancelar</button><button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="EliminarCategoria">Eliminar</button></div></Modal>
 

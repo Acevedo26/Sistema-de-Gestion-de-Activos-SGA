@@ -154,5 +154,14 @@ namespace Sistema_de_Gestion_de_Activos.Services
 				Observaciones = m.Observaciones
 			};
 		}
-	}
+	        public async Task<bool> EliminarAsync(Guid id)
+        {
+            var mantenimiento = await _context.Mantenimientos.FindAsync(id);
+            if (mantenimiento == null) return false;
+            
+            _context.Mantenimientos.Remove(mantenimiento);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
 }

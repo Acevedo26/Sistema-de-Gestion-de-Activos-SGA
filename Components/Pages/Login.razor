@@ -84,7 +84,7 @@
                 </svg>
             </div>
             <div class="text-center">
-                <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h1 class="text-lg font-semibold text-gray-900 dark:text-white focus:outline-none">
                     Acceso al Sistema de Gestión de Activos
                 </h1>
             </div>
@@ -96,7 +96,9 @@
                        Type="email"
                        placeholder="correo@empresa.com"
                        @bind-Value="email"
-                       Error="@(error != string.Empty && string.IsNullOrWhiteSpace(email) ? "Requerido" : null)" />
+                       Error="@(error != string.Empty && string.IsNullOrWhiteSpace(email) ? "Requerido" : null)"
+                       class="focus:outline-none focus:ring-0 border border-gray-300 rounded px-3 py-2 bg-blue-100" />
+
 
                 <div class="relative">
                     <Input Label="Contraseña"
