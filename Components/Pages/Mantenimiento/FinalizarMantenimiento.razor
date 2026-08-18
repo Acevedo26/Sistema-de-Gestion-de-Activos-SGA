@@ -4,59 +4,92 @@
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @inject IMantenimientoService MantenimientoService
 @inject NavigationManager Navigation
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 
 <PageTitle>Finalizar Mantenimiento</PageTitle>
 
-<div class="max-w-xl mx-auto">
-    <div class="flex items-center gap-2 mb-6">
-        <a href="/mantenimiento" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
+<div class="max-w-4xl mx-auto p-4 md:p-6">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-6">
+        <a href="/mantenimientos" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </a>
-        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-0">Finalizar Mantenimiento</h4>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Finalizar Mantenimiento</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Registre la fecha de finalización y el costo final del servicio.</p>
+        </div>
     </div>
 
     @if (mantenimiento == null)
     {
-        <p class="text-gray-400">Cargando...</p>
+        <div class="flex justify-center py-12">
+            <p class="text-gray-500">Cargando...</p>
+        </div>
     }
     else
     {
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+        <!-- Form Card -->
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 md:p-8">
+            <EditForm Model="modelo" OnValidSubmit="Guardar" class="space-y-8">
+                <DataAnnotationsValidator />
 
-            @if (!string.IsNullOrEmpty(error))
-            {
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-3 rounded text-sm dark:bg-red-900/30 dark:border-red-500 dark:text-red-200">
-                    @error
+                <!-- Section 1 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-500 mb-6 border-b border-gray-100 dark:border-gray-800 pb-2">Resumen del Servicio</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg mb-6">
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Activo</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-200">@mantenimiento.ActivoDescripcion</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Técnico</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-200">@mantenimiento.TecnicoNombre</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-200">@mantenimiento.Tipo</span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-200">@mantenimiento.Descripcion</span>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-primary-600 dark:text-primary-500 mb-6 border-b border-gray-100 dark:border-gray-800 pb-2">Datos de Finalización</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Fecha de Finalización <span class="text-red-500">*</span></label>
+                            <input type="date" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" @bind="fechaFin" @bind:format="yyyy-MM-dd" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Costo Final (₡) <span class="text-red-500">*</span></label>
+                            <InputNumber step="0.01" min="0" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" @bind-Value="modelo.Costo" />
+                            <ValidationMessage For="@(() => modelo.Costo)" class="text-red-500 text-xs mt-1" />
+                        </div>
+                    </div>
                 </div>
-            }
 
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4 text-sm text-gray-600 dark:text-gray-300">
-                <p><span class="font-semibold text-gray-900 dark:text-white">Activo:</span> @mantenimiento.ActivoDescripcion</p>
-                <p><span class="font-semibold text-gray-900 dark:text-white">Técnico:</span> @mantenimiento.TecnicoNombre</p>
-                <p><span class="font-semibold text-gray-900 dark:text-white">Tipo:</span> @mantenimiento.Tipo</p>
-                <p><span class="font-semibold text-gray-900 dark:text-white">Descripción:</span> @mantenimiento.Descripcion</p>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de finalización</label>
-                <input type="date" class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="fechaFin" @bind:format="yyyy-MM-dd" />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Costo final</label>
-                <input type="number" step="0.01" min="0" class="w-full rounded-md border border-gray-300 dark:bg-gray-900 dark:border-gray-600 dark:text-white px-3 py-2 text-sm" @bind="modelo.Costo" />
-            </div>
-
-            <div class="flex justify-end gap-3 pt-2">
-                <a href="/mantenimiento" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                    Cancelar
-                </a>
-                <button type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700" @onclick="Guardar">
-                    Finalizar
-                </button>
-            </div>
+                <!-- Footer Actions -->
+                <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+                    <a href="/mantenimientos" class="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" disabled="@isSubmitting" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        @if (isSubmitting)
+                        {
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <span>Finalizar Mantenimiento</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
         </div>
     }
 </div>
@@ -68,7 +101,7 @@
     private MantenimientoResponseDto? mantenimiento;
     private MantenimientoFinalizarDto modelo = new();
     private DateTime fechaFin = DateTime.Today;
-    private string? error;
+    private bool isSubmitting;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,7 +112,8 @@
         }
         catch (KeyNotFoundException)
         {
-            error = "Mantenimiento no encontrado.";
+            await AlertService.ShowErrorAsync("Error", "Mantenimiento no encontrado.");
+            Navigation.NavigateTo("/mantenimientos");
         }
     }
 
@@ -87,17 +121,22 @@
     {
         if (mantenimiento == null) return;
 
-        error = null;
+        isSubmitting = true;
         modelo.FechaFin = fechaFin;
 
         try
         {
             await MantenimientoService.FinalizarAsync(Id, modelo);
-            Navigation.NavigateTo("/mantenimiento");
+            await AlertService.ShowSuccessAsync("Éxito", "Mantenimiento finalizado correctamente.");
+            Navigation.NavigateTo("/mantenimientos");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            await AlertService.ShowErrorAsync("Error al finalizar", ex.Message);
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 }

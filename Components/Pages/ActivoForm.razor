@@ -1,4 +1,4 @@
-@page "/activos/nuevo"
+﻿@page "/activos/nuevo"
 @page "/activos/editar/{Id:guid}"
 @attribute [Authorize(Roles = "Administrador,Gestor")]
 @inject NavigationManager Navigation
@@ -94,6 +94,20 @@
                     </div>
                 </div>
             </div>
+
+            
+                    @if (Id != null)
+                    {
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Estado del Activo <span class="text-red-500">*</span></label>
+                            <InputSelect @bind-Value="existingState" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                                @foreach (var estado in Enum.GetValues<Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoActivo>())
+                                {
+                                    <option value="@estado">@estado</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    }
 
             <!-- Section 2 -->
             <div>
