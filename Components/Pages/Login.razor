@@ -1,10 +1,21 @@
-@page "/login"
+﻿@page "/login"
 @layout Layout.EmptyLayout
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAuthService AuthService
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
 
 @code {
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                Navigation.NavigateTo("/dashboard");
+            }
+        }
+    }
     private bool showPassword = false;
     private bool isLoading = false;
     private string email = string.Empty;

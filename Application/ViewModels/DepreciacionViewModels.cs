@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Sistema_de_Gestion_de_Activos.Application.ViewModels
@@ -13,6 +13,7 @@ namespace Sistema_de_Gestion_de_Activos.Application.ViewModels
         public Guid Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public int VidaUtil { get; set; }
+        public decimal ValorResidual { get; set; }
     }
 
     public class ActivoDetalleViewModel

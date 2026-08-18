@@ -1,4 +1,4 @@
-@page "/activos"
+﻿@page "/activos"
 @attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
@@ -8,24 +8,145 @@
 @inject ICategoriaService CategoriaService
 
 <PageTitle>Activos</PageTitle>
-<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p class="text-sm font-medium text-primary-600">Inventario</p><h1 class="text-2xl font-bold tracking-tight">Gestión de activos</h1><p class="mt-1 text-sm text-gray-500">Controle el inventario tecnológico y su asignación.</p></div><button class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" @onclick="OpenCreate">＋ Nuevo activo</button></div>
 
-@if (!string.IsNullOrEmpty(message)) { <div class="mb-4 rounded-lg border px-4 py-3 text-sm @(isError ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200" : "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-200")">@message</div> }
+<!-- Header -->
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Listado de Activos</h1>
+</div>
 
-<section class="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-5 dark:border-gray-800 dark:bg-gray-900">
-    <input @bind="search" @bind:event="oninput" @bind:after="ResetPage" placeholder="Código, descripción o serie" class="sga-input md:col-span-2" aria-label="Buscar activo" />
-    <select @bind="categoryFilter" @bind:after="ResetPage" class="sga-input" aria-label="Filtrar por categoría"><option value="">Todas las categorías</option>@foreach (var category in categories) { <option value="@category.Id">@category.Nombre</option> }</select>
-    <select @bind="stateFilter" @bind:after="ResetPage" class="sga-input" aria-label="Filtrar por estado"><option value="">Todos los estados</option>@foreach (var state in Enum.GetValues<EstadoActivo>()) { <option value="@state">@state</option> }</select>
-    <input type="date" @bind="from" @bind:after="ResetPage" class="sga-input" aria-label="Adquisición desde" />
-</section>
+@if (!string.IsNullOrEmpty(message)) { 
+    <div class="mb-4 rounded-lg border px-4 py-3 text-sm @(isError ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200" : "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-200")">
+        @message
+    </div> 
+}
 
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-    <div class="overflow-x-auto"><table class="w-full min-w-[850px] text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 dark:bg-gray-800"><tr><th class="px-5 py-4"><button @onclick="() => SortBy(nameof(ActivoResponseDto.Codigo))">Código @SortMark(nameof(ActivoResponseDto.Codigo))</button></th><th class="px-5 py-4"><button @onclick="() => SortBy(nameof(ActivoResponseDto.Descripcion))">Descripción @SortMark(nameof(ActivoResponseDto.Descripcion))</button></th><th class="px-5 py-4">Categoría</th><th class="px-5 py-4">Estado</th><th class="px-5 py-4">Responsable</th><th class="px-5 py-4 text-right"><button @onclick="() => SortBy(nameof(ActivoResponseDto.CostoInicial))">Valor @SortMark(nameof(ActivoResponseDto.CostoInicial))</button></th><th class="px-5 py-4 text-right">Acciones</th></tr></thead>
-    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">@foreach (var asset in PagedAssets) { <tr class="transition hover:bg-primary-50/40 dark:hover:bg-primary-950/20"><td class="px-5 py-4 font-mono text-xs font-semibold text-primary-700 dark:text-primary-300">@asset.Codigo</td><td class="px-5 py-4"><span class="block font-medium">@asset.Descripcion</span><span class="block text-xs text-gray-500">@asset.NumeroSerie</span></td><td class="px-5 py-4">@CategoryName(asset.CategoriaId)</td><td class="px-5 py-4"><span class="rounded-full px-2.5 py-1 text-xs font-semibold @StateClass(asset.Estado)">@asset.Estado</span></td><td class="px-5 py-4">@(asset.ResponsableNombre ?? "Sin asignar")</td><td class="px-5 py-4 text-right font-medium">@asset.CostoInicial.ToString("C")</td><td class="px-5 py-4 text-right"><a href="/activos/@asset.Id/depreciacion" class="sga-icon-button" title="Ver detalle" aria-label="Ver detalle de @asset.Codigo"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></a><button class="sga-icon-button" @onclick="() => OpenEdit(asset)" title="Editar" aria-label="Editar @asset.Codigo"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button><button class="sga-icon-button text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40" @onclick="() => confirmId = asset.Id" title="Dar de baja" aria-label="Dar de baja @asset.Codigo"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td></tr> }
-    @if (!FilteredAssets.Any()) { <tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">No se encontraron activos con los filtros seleccionados.</td></tr> }</tbody></table></div>
-    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-gray-50 px-5 py-3 text-sm dark:border-gray-800 dark:bg-gray-800/50"><span class="text-gray-500">@FilteredAssets.Count() activos · Página @(page) de @TotalPages</span><div class="flex gap-1"><button class="sga-page" disabled="@(page == 1)" @onclick="() => page--">Anterior</button>@for (var i = 1; i <= TotalPages; i++) { var current = i; <button class="sga-page @(current == page ? "sga-page-active" : "")" @onclick="() => page = current">@current</button> }<button class="sga-page" disabled="@(page == TotalPages)" @onclick="() => page++">Siguiente</button></div></div>
-</section>
+<!-- Filters Bar -->
+<div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Búsqueda -->
+        <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" placeholder="Buscar por código, descripción..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" @bind="search" @bind:event="oninput" @bind:after="ResetPage" />
+        </div>
+        
+        <!-- Botón Filtros -->
+        <button class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => showFilters = !showFilters">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtros
+        </button>
+        
+        <!-- Descargar -->
+        <button class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar
+        </button>
+    </div>
+    
+    @if (showFilters) {
+        <div class="mt-4 grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-3 dark:border-gray-800">
+            <select @bind="categoryFilter" @bind:after="ResetPage" class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" aria-label="Filtrar por categoría">
+                <option value="">Todas las categorías</option>
+                @foreach (var category in categories) { <option value="@category.Id">@category.Nombre</option> }
+            </select>
+            <select @bind="stateFilter" @bind:after="ResetPage" class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" aria-label="Filtrar por estado">
+                <option value="">Todos los estados</option>
+                @foreach (var state in Enum.GetValues<EstadoActivo>()) { <option value="@state">@state</option> }
+            </select>
+            <input type="date" @bind="from" @bind:after="ResetPage" class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" aria-label="Adquisición desde" />
+        </div>
+    }
+</div>
 
+<!-- Data Table -->
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <div class="overflow-x-auto min-h-[300px]">
+        <table class="w-full text-left text-sm">
+            <thead class="border-b border-gray-200 bg-white text-gray-500 dark:border-gray-800 dark:bg-gray-900">
+                <tr>
+                    <th class="px-6 py-4 font-medium"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></th>
+                    <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.Codigo))">Código @SortMark(nameof(ActivoResponseDto.Codigo))</button></th>
+                    <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.Descripcion))">Descripción @SortMark(nameof(ActivoResponseDto.Descripcion))</button></th>
+                    <th class="px-6 py-4 font-medium">Categoría</th>
+                    <th class="px-6 py-4 font-medium">Estado</th>
+                    <th class="px-6 py-4 font-medium text-right"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.CostoInicial))">Valor Actual @SortMark(nameof(ActivoResponseDto.CostoInicial))</button></th>
+                    <th class="px-6 py-4 font-medium">Depreciación</th>
+                    <th class="px-6 py-4 font-medium text-right"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                @foreach (var asset in PagedAssets) {
+                    <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400 font-mono text-xs">@asset.Codigo</td>
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@asset.Descripcion</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                <span class="h-1.5 w-1.5 rounded-full @CategoryDotColor(asset.CategoriaId)"></span> @CategoryName(asset.CategoriaId)
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                <span class="h-1.5 w-1.5 rounded-full @StateDotColor(asset.Estado)"></span> @asset.Estado
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">@asset.CostoInicial.ToString("C")</td>
+                        <td class="px-6 py-4">
+                            @{
+                                var depPercent = 20; // Mock until real depreciation is added to response
+                                var depColor = depPercent >= 100 ? "bg-red-500" : (depPercent > 40 ? "bg-amber-500" : "bg-primary-500");
+                            }
+                            <div class="flex items-center gap-2">
+                                <div class="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                                    <div class="h-full @depColor rounded-full" style="width: @depPercent%"></div>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500">@depPercent%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="relative flex items-center justify-end">
+                                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @onclick="() => ToggleMenu(asset.Id)"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+                                @if (openMenuId == asset.Id) {
+                                    <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
+                                        <a href="/activos/@asset.Id/depreciacion" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</a>
+                                        <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => { OpenEdit(asset); ToggleMenu(null); }">Editar</button>
+                                        <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { confirmId = asset.Id; ToggleMenu(null); }">Eliminar</button>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!FilteredAssets.Any()) {
+                    <tr><td colspan="8" class="px-6 py-12 text-center text-gray-500">No se encontraron activos con los filtros seleccionados.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Paginación -->
+    <div class="flex items-center justify-between border-t border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+        <div class="text-sm text-gray-500">
+            Mostrando @(((page - 1) * 5) + (FilteredAssets.Any() ? 1 : 0)) a @Math.Min(page * 5, FilteredAssets.Count()) de @FilteredAssets.Count() resultados
+        </div>
+        <div class="flex items-center gap-1">
+            <button class="rounded border border-gray-200 px-2.5 py-1 text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800" disabled="@(page == 1)" @onclick="() => page--">&lt;</button>
+            @for (var i = 1; i <= TotalPages; i++) {
+                var current = i;
+                <button class="@(current == page ? "rounded bg-primary-600 px-3 py-1 text-white" : "rounded border border-gray-200 px-3 py-1 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800")" @onclick="() => page = current">@current</button>
+            }
+            <button class="rounded border border-gray-200 px-2.5 py-1 text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800" disabled="@(page == TotalPages)" @onclick="() => page++">&gt;</button>
+        </div>
+    </div>
+</div>
+
+<!-- Botón Crear (Abajo derecha) -->
+<div class="mt-6 flex justify-end">
+    <button class="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors" @onclick="OpenCreate">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nuevo Activo
+    </button>
+</div>
+
+<!-- Modals -->
 <Modal @bind-IsOpen="showForm" Title="@(editing is null ? "Nuevo activo" : "Editar activo")" Class="max-w-2xl">
     <EditForm Model="form" OnValidSubmit="Save" class="grid grid-cols-1 gap-4 md:grid-cols-2"><DataAnnotationsValidator /><ValidationSummary />
         @if (editing is null) { <div><label class="sga-label">Código</label><InputText class="sga-input" @bind-Value="form.Codigo" /></div> }
@@ -43,6 +164,29 @@
 @code {
     private readonly List<ActivoResponseDto> assets = new(); private List<CategoriaResponseDto> categories = new(); private ActivoRequestDto form = new() { FechaAdquisicion = DateTime.Today }; private ActivoResponseDto? editing;
     private string search = "", categoryFilter = "", stateFilter = "", locationText = "", sort = nameof(ActivoResponseDto.Codigo), message = ""; private DateTime? from; private EstadoActivo editState; private int page = 1; private bool descending, showForm, isError; private Guid? confirmId;
+    
+    private bool showFilters = false;
+    private Guid? openMenuId;
+
+    private void ToggleMenu(Guid? id) {
+        if (openMenuId == id) openMenuId = null;
+        else openMenuId = id;
+    }
+
+    private string StateDotColor(EstadoActivo state) => state switch {
+        EstadoActivo.Activo => "bg-green-500",
+        EstadoActivo.Mantenimiento => "bg-amber-500",
+        EstadoActivo.Inactivo => "bg-gray-500",
+        EstadoActivo.Baja => "bg-red-500",
+        _ => "bg-primary-500"
+    };
+
+    private string[] dotColors = new[] { "bg-primary-500", "bg-amber-500", "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-rose-500" };
+    private string CategoryDotColor(Guid id) {
+        var index = Math.Abs(id.GetHashCode()) % dotColors.Length;
+        return dotColors[index];
+    }
+
     private bool showConfirm { get => confirmId.HasValue; set { if (!value) confirmId = null; } }
     protected override async Task OnInitializedAsync() { categories = (await CategoriaService.ObtenerTodasAsync()).ToList(); await Load(); }
     private async Task Load() { assets.Clear(); assets.AddRange(await ActivoService.ObtenerTodosAsync()); ResetPage(); }
@@ -54,7 +198,7 @@
     private string SortMark(string column) => sort == column ? (descending ? "↓" : "↑") : "";
     private void ResetPage() => page = 1;
     private string CategoryName(Guid id) => categories.FirstOrDefault(x => x.Id == id)?.Nombre ?? "—";
-    private static string StateClass(EstadoActivo state) => state == EstadoActivo.Activo ? "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+    
     private void OpenCreate() { editing = null; form = new() { FechaAdquisicion = DateTime.Today }; locationText = ""; showForm = true; }
     private void OpenEdit(ActivoResponseDto asset) { editing = asset; form = new() { Codigo = asset.Codigo, Descripcion = asset.Descripcion, CategoriaId = asset.CategoriaId, UbicacionId = asset.UbicacionId, CostoInicial = asset.CostoInicial, FechaAdquisicion = asset.FechaAdquisicion, Proveedor = asset.Proveedor, NumeroSerie = asset.NumeroSerie }; locationText = asset.UbicacionId.ToString(); editState = asset.Estado; showForm = true; }
     private async Task Save() { try { if (!Guid.TryParse(locationText, out var location)) throw new InvalidOperationException("Seleccione una ubicación válida."); form.UbicacionId = location; if (form.CategoriaId == Guid.Empty) throw new InvalidOperationException("Seleccione una categoría."); if (editing is null) await ActivoService.CrearActivoAsync(form); else await ActivoService.ActualizarActivoAsync(editing.Id, new ActivoUpdateDto { Descripcion = form.Descripcion, CategoriaId = form.CategoriaId, UbicacionId = location, CostoInicial = form.CostoInicial, FechaAdquisicion = form.FechaAdquisicion, Proveedor = form.Proveedor, NumeroSerie = form.NumeroSerie, Estado = editState }); showForm = false; isError = false; message = "Activo guardado correctamente."; await Load(); } catch (Exception ex) { isError = true; message = ex.Message; } }

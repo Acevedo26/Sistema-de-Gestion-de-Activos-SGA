@@ -1,3 +1,4 @@
+﻿using System.Globalization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,50 +33,49 @@ builder.Services.AddCors(options => options.AddPolicy("SgaClient", policy =>
 
 // 1. Inyectar HttpContextAccessor y el Interceptor de Auditoría
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<Sistema_de_Gestion_de_Activos.Data.Interceptors.AuditoriaInterceptor>();
+builder.Services.AddTransient<Sistema_de_Gestion_de_Activos.Data.Interceptors.AuditoriaInterceptor>();
 
 // 2. Configurar DbContext con SQL Server e Interceptors
 builder.Services.AddDbContext<SgaDbContext>((sp, options) =>
 {
     var interceptor = sp.GetRequiredService<Sistema_de_Gestion_de_Activos.Data.Interceptors.AuditoriaInterceptor>();
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .AddInterceptors(interceptor);
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))           .AddInterceptors(interceptor);
+}, ServiceLifetime.Transient);
 
 // 3. Inyección de Dependencias (Repositorios y Servicios)
 // Repositorio genérico 
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 // Repositorio y Servicio específicos de Usuario
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddTransient<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddTransient<IUsuarioService, UsuarioService>();
 
 // Módulo 1 - Gestión de Activos
-builder.Services.AddScoped<IActivoService, ActivoService>();
+builder.Services.AddTransient<IActivoService, ActivoService>();
 
 // Módulo 2 - Movimientos
-builder.Services.AddScoped<IMovimientoService, MovimientoService>();
+builder.Services.AddTransient<IMovimientoService, MovimientoService>();
 
 // Servicios de Autenticación, Correo y Auditoría
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IAuditoriaService, AuditoriaService>();
 
 // Servicios del Módulo 3 — Mantenimiento
-builder.Services.AddScoped<IMantenimientoService, MantenimientoService>();
-builder.Services.AddScoped<IProgramaMantenimientoService, ProgramaMantenimientoService>();
+builder.Services.AddTransient<IMantenimientoService, MantenimientoService>();
+builder.Services.AddTransient<IProgramaMantenimientoService, ProgramaMantenimientoService>();
 
 // Servicios del Módulo 4 — Reportes y Análisis
-builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
-builder.Services.AddScoped<IReporteMantenimientoAnalisisService, ReporteMantenimientoAnalisisService>();
+builder.Services.AddTransient<IReporteInventarioService, ReporteInventarioService>();
+builder.Services.AddTransient<IReporteMantenimientoAnalisisService, ReporteMantenimientoAnalisisService>();
 
 // Servicios del Módulo 6 — Depreciación
-builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-builder.Services.AddScoped<IDepreciacionService, DepreciacionService>();
-builder.Services.AddScoped<IHistorialDepreciacionService, HistorialDepreciacionService>();
-builder.Services.AddScoped<IReporteDepreciacionService, ReporteDepreciacionService>();
+builder.Services.AddTransient<ICategoriaService, CategoriaService>();
+builder.Services.AddTransient<IDepreciacionService, DepreciacionService>();
+builder.Services.AddTransient<IHistorialDepreciacionService, HistorialDepreciacionService>();
+builder.Services.AddTransient<IReporteDepreciacionService, ReporteDepreciacionService>();
 // builder.Services.AddScoped<IExportacionContableService, ExportacionContableService>();
-builder.Services.AddScoped<IAnalisisIntegradoService, AnalisisIntegradoService>();
-builder.Services.AddScoped<INotificacionDepreciacionService, NotificacionDepreciacionService>();
+builder.Services.AddTransient<IAnalisisIntegradoService, AnalisisIntegradoService>();
+builder.Services.AddTransient<INotificacionDepreciacionService, NotificacionDepreciacionService>();
 
 builder.Services.AddControllers(options => options.Filters.Add(new AuthorizeFilter()));
 builder.Services.AddEndpointsApiExplorer();
@@ -136,8 +136,20 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidateAudience = true,
         ValidAudience = jwtSettings["Audience"],
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero // Elimina el margen de 5 min por defecto para la expiración
+                ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            if (context.Request.Headers["Accept"].ToString().Contains("text/html"))
+            {
+                context.HandleResponse();
+                context.Response.Redirect("/login");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -193,6 +205,19 @@ app.UseCors("SgaClient");
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGA API v1"));
 
+var cultureInfo = (CultureInfo)new CultureInfo("es-CR").Clone();
+cultureInfo.NumberFormat.CurrencySymbol = "₡";
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(cultureInfo),
+    SupportedCultures = new List<CultureInfo> { cultureInfo },
+    SupportedUICultures = new List<CultureInfo> { cultureInfo }
+});
+
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
