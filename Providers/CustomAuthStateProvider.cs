@@ -53,6 +53,7 @@ namespace Sistema_de_Gestion_de_Activos.Providers
         {
             var claims = new Dictionary<string, string>
             {
+                { ClaimTypes.NameIdentifier, usuario.Id.ToString() },
                 { ClaimTypes.Name, usuario.Nombre },
                 { ClaimTypes.Email, usuario.Correo },
                 { ClaimTypes.Role, usuario.Rol.Nombre.ToString() }

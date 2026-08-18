@@ -47,7 +47,11 @@ namespace Sistema_de_Gestion_de_Activos.Data.Interceptors
             }
 
             // Lista de entidades a auditar explícitamente (RF-18: activos, mantenimientos)
-            var entidadesAuditables = new[] { "Activo", "Mantenimiento" };
+            var entidadesAuditables = new[]
+            {
+                "Activo", "Mantenimiento", "Movimiento", "ProgramaMantenimiento",
+                "Categoria", "Usuario", "Depreciacion", "ParametroSistema"
+            };
 
             foreach (var entry in entries)
             {

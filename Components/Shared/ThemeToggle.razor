@@ -1,0 +1,29 @@
+@inject IJSRuntime JS
+
+<button type="button" class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-gray-300 dark:hover:bg-gray-800" @onclick="Toggle" aria-label="@(_dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro")" title="@(_dark ? "Modo claro" : "Modo oscuro")">
+    @if (_dark)
+    {
+        <span aria-hidden="true">☀</span>
+    }
+    else
+    {
+        <span aria-hidden="true">☾</span>
+    }
+</button>
+
+@code {
+    private bool _dark;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _dark = (await JS.InvokeAsync<string>("sgaTheme.initialize")) == "dark";
+        StateHasChanged();
+    }
+
+    private async Task Toggle()
+    {
+        _dark = !_dark;
+        await JS.InvokeVoidAsync("sgaTheme.set", _dark ? "dark" : "light");
+    }
+}

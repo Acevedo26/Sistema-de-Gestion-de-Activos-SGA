@@ -1,0 +1,24 @@
+@page "/"
+@page "/dashboard"
+@attribute [Authorize]
+@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Panel de control</PageTitle>
+<h1 class="text-2xl font-bold mb-6">Panel de control</h1>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg p-5 shadow"><p class="text-gray-500">Activos activos</p><strong class="text-3xl">@activos</strong></div>
+    <div class="bg-white rounded-lg p-5 shadow"><p class="text-gray-500">Mantenimientos pendientes</p><strong class="text-3xl">@pendientes</strong></div>
+    <div class="bg-white rounded-lg p-5 shadow"><p class="text-gray-500">Alertas sin leer</p><strong class="text-3xl">@alertas</strong></div>
+</div>
+<div class="mt-6"><WidgetAlertas /></div>
+
+@code {
+    private int activos, pendientes, alertas;
+    protected override async Task OnInitializedAsync()
+    {
+        activos = await DbContext.Activos.CountAsync(a => a.Estado == Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoActivo.Activo);
+        pendientes = await DbContext.Mantenimientos.CountAsync(m => m.Estado != Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoMantenimiento.Finalizado);
+        alertas = await DbContext.Notificaciones.CountAsync(n => !n.Leida);
+    }
+}

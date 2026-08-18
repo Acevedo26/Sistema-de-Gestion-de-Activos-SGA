@@ -59,10 +59,16 @@ namespace Sistema_de_Gestion_de_Activos.Services
 			var activo = await _context.Activos.FindAsync(dto.ActivoId);
 			if (activo == null)
 				throw new KeyNotFoundException("Activo no encontrado.");
+			if (activo.Estado is EstadoActivo.Baja or EstadoActivo.Descartado)
+				throw new InvalidOperationException("No se puede registrar mantenimiento para un activo dado de baja o descartado.");
+			if (dto.FechaFin.HasValue && dto.FechaFin.Value < dto.FechaInicio)
+				throw new InvalidOperationException("La fecha de finalización no puede ser anterior a la fecha de inicio.");
 
-			var tecnico = await _context.Usuarios.FindAsync(dto.TecnicoId);
+			var tecnico = await _context.Usuarios.Include(u => u.Rol).FirstOrDefaultAsync(u => u.Id == dto.TecnicoId);
 			if (tecnico == null)
 				throw new KeyNotFoundException("Técnico no encontrado.");
+			if (tecnico.Estado != EstadoUsuario.Activo || tecnico.Rol.Nombre != NombreRol.Tecnico)
+				throw new InvalidOperationException("El responsable debe ser un usuario técnico activo.");
 
 			var mantenimiento = new Mantenimiento
 			{
@@ -103,6 +109,10 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
 			if (mantenimiento == null)
 				throw new KeyNotFoundException("Mantenimiento no encontrado.");
+			if (dto.FechaFin < mantenimiento.FechaInicio)
+				throw new InvalidOperationException("La fecha de finalización no puede ser anterior a la fecha de inicio.");
+			if (dto.Costo < 0)
+				throw new InvalidOperationException("El costo no puede ser negativo.");
 
 			mantenimiento.FechaFin = dto.FechaFin;
 			mantenimiento.Costo = dto.Costo;

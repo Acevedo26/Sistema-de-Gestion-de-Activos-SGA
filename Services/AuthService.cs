@@ -61,8 +61,8 @@ namespace Sistema_de_Gestion_de_Activos.Services
             await _tokenRepository.AddAsync(tokenEntity);
             await _tokenRepository.SaveChangesAsync();
 
-            string appUrl = _configuration["AppUrl"] ?? "http://localhost:5000";
-            string enlace = $"{appUrl}/auth/restablecer?token={rawToken}";
+            string appUrl = _configuration["AppUrl"] ?? throw new InvalidOperationException("AppUrl debe configurarse.");
+            string enlace = $"{appUrl.TrimEnd('/')}/restablecer-password/{rawToken}";
             
             await _emailService.EnviarCorreoRecuperacionAsync(correo, enlace);
         }

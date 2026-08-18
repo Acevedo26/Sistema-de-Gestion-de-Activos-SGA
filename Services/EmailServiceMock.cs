@@ -22,5 +22,11 @@ namespace Sistema_de_Gestion_de_Activos.Services
             
             return Task.CompletedTask;
         }
+
+        public Task EnviarAsync(string destinatario, string asunto, string html)
+        {
+            _logger.LogInformation("Correo simulado para {Destinatario}: {Asunto}", destinatario, asunto);
+            return Task.CompletedTask;
+        }
     }
 }

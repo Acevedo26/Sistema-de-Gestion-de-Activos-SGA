@@ -1,6 +1,7 @@
 ﻿@page "/reportes/mantenimientos"
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Reportes
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@attribute [Authorize]
 @inject IReporteMantenimientoAnalisisService ReporteService
 @inject ICategoriaService CategoriaService
 @inject IUsuarioService UsuarioService

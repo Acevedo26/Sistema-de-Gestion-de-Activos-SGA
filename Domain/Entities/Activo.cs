@@ -50,12 +50,25 @@ namespace Sistema_de_Gestion_de_Activos.Domain.Entities
         [Column("ubicacion_id")]
         public Guid UbicacionId { get; set; }
 
+        [Column("responsable_id")]
+        public Guid? ResponsableId { get; set; }
+
+        [Column("fecha_asignacion")]
+        public DateTime? FechaAsignacion { get; set; }
+
+        [MaxLength(500)]
+        [Column("observaciones_asignacion")]
+        public string? ObservacionesAsignacion { get; set; }
+
         // Navegación
         [ForeignKey(nameof(CategoriaId))]
         public Categoria Categoria { get; set; } = null!;
 
         [ForeignKey(nameof(UbicacionId))]
         public Ubicacion Ubicacion { get; set; } = null!;
+
+        [ForeignKey(nameof(ResponsableId))]
+        public Usuario? Responsable { get; set; }
 
         public Depreciacion? Depreciacion { get; set; }
     }

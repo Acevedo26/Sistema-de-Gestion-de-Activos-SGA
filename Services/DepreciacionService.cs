@@ -20,6 +20,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
         public async Task InicializarDepreciacionAsync(Guid activoId, decimal costoInicial, Guid categoriaId)
         {
+            if (await _context.Depreciaciones.AnyAsync(d => d.ActivoId == activoId)) return;
             var categoria = await _context.Categorias.FindAsync(categoriaId);
             if (categoria == null) throw new Exception("Categoría no encontrada.");
 
@@ -28,7 +29,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 Id = Guid.NewGuid(),
                 ActivoId = activoId,
                 VidaUtilAsignada = categoria.VidaUtil,
-                ValorResidual = categoria.ValorResidual,
+                ValorResidual = Math.Clamp(categoria.ValorResidual, 0m, costoInicial),
                 ValorActual = costoInicial,
                 PorcentajeConsumido = 0m,
                 FechaUltimoCalculo = DateTime.UtcNow
@@ -113,6 +114,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
         public async Task<DepreciacionDto?> ObtenerDetalleFinancieroAsync(Guid activoId)
         {
+            await RecalcularAsync(activoId);
             var activo = await _context.Activos
                 .Include(a => a.Depreciacion)
                 .FirstOrDefaultAsync(a => a.Id == activoId);

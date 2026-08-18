@@ -129,7 +129,9 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 Categoria = h.Depreciacion.Activo.Categoria.Nombre,
                 CostoOriginal = h.Depreciacion.Activo.CostoInicial,
                 ValorActual = h.ValorActual,
+                ValorResidual = h.ValorResidual,
                 DepreciacionAcumulada = h.DepreciacionAcumulada,
+                PorcentajeConsumido = h.PorcentajeConsumido,
                 FechaConsulta = h.FechaConsulta.ToString("yyyy-MM-dd")
             });
 

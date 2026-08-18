@@ -156,6 +156,12 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Activo>()
+                .HasOne(a => a.Responsable)
+                .WithMany()
+                .HasForeignKey(a => a.ResponsableId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Activo>()
                 .HasOne(a => a.Depreciacion)
                 .WithOne(d => d.Activo)
                 .HasForeignKey<Depreciacion>(d => d.ActivoId)
@@ -220,6 +226,12 @@ namespace Sistema_de_Gestion_de_Activos.Data
 				.WithMany()
 				.HasForeignKey(m => m.UbicacionDestinoId)
 				.OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Movimiento>()
+                .HasOne(m => m.Usuario)
+                .WithMany()
+                .HasForeignKey(m => m.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }

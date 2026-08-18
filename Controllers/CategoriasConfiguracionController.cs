@@ -8,7 +8,7 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
 {
     [ApiController]
     [Route("api/categorias")]
-    // [Authorize(Roles = "Administrador")] // Descomentar al integrar autenticación
+    [Authorize(Roles = "Administrador")]
     public class CategoriasConfiguracionController : ControllerBase
     {
         private readonly ICategoriaService _categoriaService;

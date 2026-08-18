@@ -22,6 +22,9 @@ namespace Sistema_de_Gestion_de_Activos.Domain.Entities
         [Column("ubicacion_destino_id")]
         public Guid UbicacionDestinoId { get; set; }
 
+        [Column("usuario_id")]
+        public Guid? UsuarioId { get; set; }
+
         [Required]
         [Column("fecha_movimiento")]
         public DateTime FechaMovimiento { get; set; }
@@ -38,5 +41,8 @@ namespace Sistema_de_Gestion_de_Activos.Domain.Entities
 
         [ForeignKey(nameof(UbicacionDestinoId))]
         public Ubicacion UbicacionDestino { get; set; } = null!;
+
+        [ForeignKey(nameof(UsuarioId))]
+        public Usuario? Usuario { get; set; }
     }
 }

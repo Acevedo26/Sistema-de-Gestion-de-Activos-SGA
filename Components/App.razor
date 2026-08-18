@@ -36,6 +36,20 @@
     <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
     <script>
+        window.sgaTheme = {
+            get: () => localStorage.getItem('sga-theme') || 'light',
+            set: (theme) => {
+                localStorage.setItem('sga-theme', theme);
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+            },
+            initialize: () => {
+                const saved = localStorage.getItem('sga-theme');
+                const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+                return theme;
+            }
+        };
+        window.sgaTheme.initialize();
         window.downloadFileFromBase64 = function(filename, base64) {
             const link = document.createElement('a');
             link.download = filename;

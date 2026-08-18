@@ -9,6 +9,7 @@
         public Guid UbicacionOrigenId { get; set; }
 
         public Guid UbicacionDestinoId { get; set; }
+        public Guid? UsuarioId { get; set; }
 
         public DateTime FechaMovimiento { get; set; }
 

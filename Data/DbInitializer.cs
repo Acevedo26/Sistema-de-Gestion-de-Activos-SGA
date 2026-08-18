@@ -8,7 +8,7 @@ namespace Sistema_de_Gestion_de_Activos.Data
 {
     public static class DbInitializer
     {
-        public static void Initialize(SgaDbContext context)
+        public static void Initialize(SgaDbContext context, bool includeDevelopmentUser)
         {
             if (!context.Roles.Any())
             {
@@ -24,28 +24,31 @@ namespace Sistema_de_Gestion_de_Activos.Data
                 context.Roles.AddRange(roles);
                 context.SaveChanges();
 
-                // 2. Crear Usuario Administrador
-                var adminRole = roles.First(r => r.Nombre == NombreRol.Administrador);
-                var adminUser = new Usuario
+                if (includeDevelopmentUser)
                 {
-                    Id = Guid.NewGuid(),
-                    Nombre = "Admin de Prueba",
-                    Correo = "admin@sga.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
-                    RolId = adminRole.Id,
-                    Estado = EstadoUsuario.Activo
-                };
-
-                context.Usuarios.Add(adminUser);
-                context.SaveChanges();
+                    var adminRole = roles.First(r => r.Nombre == NombreRol.Administrador);
+                    context.Usuarios.Add(new Usuario
+                    {
+                        Id = Guid.NewGuid(),
+                        Nombre = "Administrador de desarrollo",
+                        Correo = "admin@sga.local",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                        RolId = adminRole.Id,
+                        Estado = EstadoUsuario.Activo
+                    });
+                    context.SaveChanges();
+                }
             }
 
             // 3. Crear Datos de Prueba - Módulo 6 (Depreciación)
             if (!context.Categorias.Any())
             {
-                var catComputo = new Categoria { Id = Guid.NewGuid(), Nombre = "Equipos de Cómputo", VidaUtil = 5, ValorResidual = 10m };
-                var catMobiliario = new Categoria { Id = Guid.NewGuid(), Nombre = "Mobiliario", VidaUtil = 10, ValorResidual = 5m };
-                context.Categorias.AddRange(catComputo, catMobiliario);
+                var catComputo = new Categoria { Id = Guid.NewGuid(), Nombre = "Equipos de Cómputo", VidaUtil = 5, ValorResidual = 0m };
+                var catElectronicos = new Categoria { Id = Guid.NewGuid(), Nombre = "Dispositivos Electrónicos", VidaUtil = 4, ValorResidual = 0m };
+                var catMobiliario = new Categoria { Id = Guid.NewGuid(), Nombre = "Mobiliario", VidaUtil = 10, ValorResidual = 0m };
+                var catMaquinaria = new Categoria { Id = Guid.NewGuid(), Nombre = "Maquinaria", VidaUtil = 10, ValorResidual = 0m };
+                var catHerramientas = new Categoria { Id = Guid.NewGuid(), Nombre = "Herramientas", VidaUtil = 5, ValorResidual = 0m };
+                context.Categorias.AddRange(catComputo, catElectronicos, catMobiliario, catMaquinaria, catHerramientas);
 
                 var ubiSistemas = new Ubicacion { Id = Guid.NewGuid(), Edificio = "Edificio Central", Departamento = "Sistemas", Oficina = "101" };
                 var ubiVentas = new Ubicacion { Id = Guid.NewGuid(), Edificio = "Edificio Central", Departamento = "Ventas", Oficina = "202" };

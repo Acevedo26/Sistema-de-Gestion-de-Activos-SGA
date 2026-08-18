@@ -1,0 +1,8 @@
+.sga-nav { display:flex; align-items:center; gap:.75rem; border-radius:.65rem; padding:.65rem .75rem; color:#4b5563; font-size:.875rem; font-weight:600; transition:background-color .18s ease,color .18s ease,box-shadow .18s ease; }
+.sga-nav:hover { background:#f0fdfa; color:#0f766e; }
+.sga-nav:focus-visible,.sga-subnav:focus-visible { outline:2px solid #14b8a6; outline-offset:2px; }
+.sga-nav-active { position:relative; background:#f0fdfa; color:#0f766e; }
+.sga-subnav { display:block; border-radius:.5rem; padding:.45rem .6rem; color:#6b7280; font-size:.8rem; font-weight:600; transition:background-color .18s ease,color .18s ease; }
+.sga-subnav:hover,.sga-subnav-active { background:#f0fdfa; color:#0f766e; }
+:global(.dark) .sga-nav { color:#d1d5db; }
+:global(.dark) .sga-nav:hover,:global(.dark) .sga-nav-active,:global(.dark) .sga-subnav:hover,:global(.dark) .sga-subnav-active { background:rgba(13,148,136,.18); color:#5eead4; }

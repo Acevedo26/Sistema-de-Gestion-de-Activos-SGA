@@ -1,0 +1,10 @@
+@page "/administracion"
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Administración</PageTitle>
+<h1 class="text-2xl font-bold mb-6">Administración</h1>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/usuarios"><h2 class="font-semibold">Usuarios y roles</h2><p>Crear, actualizar, activar y desactivar usuarios.</p></a>
+    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/depreciacion/configuracion-categorias"><h2 class="font-semibold">Categorías</h2><p>Configurar la vida útil de nuevos activos.</p></a>
+    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/auditoria"><h2 class="font-semibold">Auditoría</h2><p>Consultar operaciones críticas.</p></a>
+</div>

@@ -1,5 +1,6 @@
 @page "/categorias"
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @inject ICategoriaService CategoriaService
 
@@ -7,7 +8,7 @@
 
 <div class="flex justify-between items-center mb-6">
     <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-0">Categorías de activos</h4>
-    <span class="text-gray-500 dark:text-gray-400 text-sm">Solo Administradores pueden editar esta configuración</span>
+    <div class="flex items-center gap-3"><span class="text-gray-500 dark:text-gray-400 text-sm">Solo Administradores pueden editar esta configuración</span><button class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700" @onclick="() => mostrarNueva = true">＋ Nueva categoría</button></div>
 </div>
 
 <div class="bg-cyan-50 border-l-4 border-cyan-600 text-cyan-900 p-4 mb-6 rounded-r shadow-sm dark:bg-cyan-900/30 dark:border-cyan-500 dark:text-cyan-100" role="alert">
@@ -49,6 +50,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         Editar
                                     </button>
+                                    <button class="ml-1 inline-grid h-8 w-8 place-items-center rounded-md text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:hover:bg-red-950/40" @onclick="() => { categoriaAEliminar = categoria; mostrarEliminar = true; }" title="Eliminar categoría" aria-label="Eliminar @categoria.Nombre">⌫</button>
                                 }
                                 else
                                 {
@@ -103,6 +105,17 @@
     </div>
 }
 
+<Modal @bind-IsOpen="mostrarNueva" Title="Nueva categoría">
+    <EditForm Model="nuevaCategoria" OnValidSubmit="GuardarNueva" class="space-y-4"><DataAnnotationsValidator /><ValidationSummary />
+        <div><label class="mb-1 block text-sm font-semibold">Nombre</label><InputText class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.Nombre" /></div>
+        <div><label class="mb-1 block text-sm font-semibold">Vida útil (años)</label><InputNumber class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.VidaUtil" /></div>
+        <div><label class="mb-1 block text-sm font-semibold">Valor residual</label><InputNumber class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" @bind-Value="nuevaCategoria.ValorResidual" /></div>
+        <div class="flex justify-end gap-2"><button type="button" class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => mostrarNueva = false">Cancelar</button><button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Guardar</button></div>
+    </EditForm>
+</Modal>
+
+<Modal @bind-IsOpen="mostrarEliminar" Title="Eliminar categoría"><p class="text-sm text-gray-600 dark:text-gray-300">¿Desea eliminar <strong>@categoriaAEliminar?.Nombre</strong>? Solo será posible si no tiene activos asociados.</p><div class="mt-6 flex justify-end gap-2"><button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => mostrarEliminar = false">Cancelar</button><button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="EliminarCategoria">Eliminar</button></div></Modal>
+
 @code {
     private CategoriaConfigViewModel Model = new();
     private bool mostrarModal = false;
@@ -110,6 +123,10 @@
     private int nuevaVidaUtil;
     
     private bool EsAdmin = true;
+    private bool mostrarNueva;
+    private bool mostrarEliminar;
+    private CategoriaItemViewModel? categoriaAEliminar;
+    private CategoriaCreateDto nuevaCategoria = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -148,5 +165,21 @@
             await CargarCategorias();
         }
         CerrarModal();
+    }
+
+    private async Task GuardarNueva()
+    {
+        await CategoriaService.CrearAsync(nuevaCategoria);
+        nuevaCategoria = new();
+        mostrarNueva = false;
+        await CargarCategorias();
+    }
+
+    private async Task EliminarCategoria()
+    {
+        if (categoriaAEliminar is not null) await CategoriaService.EliminarAsync(categoriaAEliminar.Id);
+        categoriaAEliminar = null;
+        mostrarEliminar = false;
+        await CargarCategorias();
     }
 }

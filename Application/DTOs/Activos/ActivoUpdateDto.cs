@@ -11,11 +11,14 @@ namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
         public Guid? UbicacionId { get; set; }
 
         public decimal? CostoInicial { get; set; }
+        public DateTime? FechaAdquisicion { get; set; }
 
         public string? Proveedor { get; set; }
 
         public string? NumeroSerie { get; set; }
 
         public EstadoActivo? Estado { get; set; }
+        public Guid? ResponsableId { get; set; }
+        public string? ObservacionesAsignacion { get; set; }
     }
 }

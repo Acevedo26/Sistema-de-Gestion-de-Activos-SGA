@@ -1,0 +1,10 @@
+@page "/reportes"
+@attribute [Authorize]
+
+<PageTitle>Reportes</PageTitle>
+<div class="mb-6"><p class="text-sm font-medium text-primary-600">Análisis</p><h1 class="text-2xl font-bold">Centro de reportes</h1><p class="mt-1 text-sm text-gray-500">Exporte información para inventario, mantenimiento y cierre contable.</p></div>
+<div class="grid gap-4 md:grid-cols-3">
+    <a href="/reportes/inventario" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-800 dark:bg-gray-900"><span class="text-2xl">▣</span><h2 class="mt-4 font-semibold">Inventario</h2><p class="mt-1 text-sm text-gray-500">Existencias, ubicación y valor de los activos.</p></a>
+    <a href="/reportes/mantenimientos" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-800 dark:bg-gray-900"><span class="text-2xl">⚒</span><h2 class="mt-4 font-semibold">Mantenimientos</h2><p class="mt-1 text-sm text-gray-500">Costos, historial y tendencias operativas.</p></a>
+    <a href="/depreciacion" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-800 dark:bg-gray-900"><span class="text-2xl">◔</span><h2 class="mt-4 font-semibold">Depreciación</h2><p class="mt-1 text-sm text-gray-500">Valores contables y activos próximos a depreciarse.</p></a>
+</div>

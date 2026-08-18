@@ -14,4 +14,11 @@ namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
         public int VidaUtilAsignada { get; set; }
         public DateTime FechaEstimadaFinDepreciacion { get; set; }
     }
+
+    public class AnalisisMantenimientoDto
+    {
+        public decimal CostoMantenimientoAcumulado { get; set; }
+        public decimal RelacionCostoValor { get; set; }
+        public decimal UmbralAlerta { get; set; }
+    }
 }

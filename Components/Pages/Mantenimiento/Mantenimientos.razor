@@ -1,5 +1,7 @@
 ﻿@page "/mantenimiento"
+@page "/mantenimientos"
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
+@attribute [Authorize(Roles = "Administrador,Gestor,Tecnico")]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
 @inject IMantenimientoService MantenimientoService
@@ -16,6 +18,12 @@
         </svg>
         Nuevo Mantenimiento
     </button>
+</div>
+
+<div class="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-3 dark:border-gray-700 dark:bg-gray-800">
+    <input @bind="search" @bind:event="oninput" @bind:after="ResetPage" placeholder="Activo, técnico o descripción" class="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-gray-600" aria-label="Buscar mantenimiento" />
+    <select @bind="tipoFiltro" @bind:after="ResetPage" class="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-gray-600" aria-label="Filtrar por tipo"><option value="">Todos los tipos</option>@foreach (var tipo in Enum.GetValues<TipoMantenimiento>()) { <option value="@tipo">@tipo</option> }</select>
+    <select @bind="estadoFiltro" @bind:after="ResetPage" class="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-gray-600" aria-label="Filtrar por estado"><option value="">Todos los estados</option>@foreach (var estado in Enum.GetValues<EstadoMantenimiento>()) { <option value="@estado">@estado</option> }</select>
 </div>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
@@ -36,7 +44,7 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @if (mantenimientos != null)
                 {
-                    @foreach (var m in mantenimientos)
+                    @foreach (var m in Filtrados.Skip((page - 1) * 5).Take(5))
                     {
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@m.ActivoDescripcion</td>
@@ -53,10 +61,7 @@
                             <td class="px-6 py-4 text-right">
                                 @if (m.Estado != EstadoMantenimiento.Finalizado)
                                 {
-                                    <button class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-                                            @onclick="() => IrAFinalizar(m.Id)">
-                                        Finalizar
-                                    </button>
+                                    <button class="inline-grid h-8 w-8 place-items-center rounded-md bg-green-600 text-sm font-bold text-white transition hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500" @onclick="() => IrAFinalizar(m.Id)" title="Finalizar mantenimiento" aria-label="Finalizar mantenimiento">✓</button>
                                 }
                             </td>
                         </tr>
@@ -75,6 +80,8 @@
     </div>
 </div>
 
+<div class="mb-6 flex items-center justify-between text-sm"><span class="text-gray-500">@Filtrados.Count() registros · Página @(page) de @TotalPages</span><div class="flex gap-1"><button class="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40 dark:hover:bg-gray-800" disabled="@(page == 1)" @onclick="() => page--">Anterior</button>@for (var i = 1; i <= TotalPages; i++) { var current = i; <button class="rounded px-3 py-1 @(current == page ? "bg-primary-600 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800")" @onclick="() => page = current">@current</button> }<button class="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40 dark:hover:bg-gray-800" disabled="@(page == TotalPages)" @onclick="() => page++">Siguiente</button></div></div>
+
 <div class="flex justify-end">
     <a href="/mantenimiento/programas" class="text-sm font-medium text-primary-600 hover:text-primary-700">
         Ver programas de mantenimiento preventivo →
@@ -83,6 +90,13 @@
 
 @code {
     private List<MantenimientoResponseDto>? mantenimientos;
+    private string search = "", tipoFiltro = "", estadoFiltro = "";
+    private int page = 1;
+    private IEnumerable<MantenimientoResponseDto> Filtrados => (mantenimientos ?? Enumerable.Empty<MantenimientoResponseDto>()).Where(m =>
+        (string.IsNullOrWhiteSpace(search) || m.ActivoDescripcion.Contains(search, StringComparison.OrdinalIgnoreCase) || m.TecnicoNombre.Contains(search, StringComparison.OrdinalIgnoreCase) || m.Descripcion.Contains(search, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrEmpty(tipoFiltro) || m.Tipo.ToString() == tipoFiltro) &&
+        (string.IsNullOrEmpty(estadoFiltro) || m.Estado.ToString() == estadoFiltro));
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(Filtrados.Count() / 5d));
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,6 +104,8 @@
     }
 
     private void IrARegistrar() => Navigation.NavigateTo("/mantenimiento/registrar");
+
+    private void ResetPage() => page = 1;
 
     private void IrAFinalizar(Guid id) => Navigation.NavigateTo($"/mantenimiento/finalizar/{id}");
 

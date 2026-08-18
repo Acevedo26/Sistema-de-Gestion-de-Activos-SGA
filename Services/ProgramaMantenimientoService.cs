@@ -14,10 +14,12 @@ namespace Sistema_de_Gestion_de_Activos.Services
 	public class ProgramaMantenimientoService : IProgramaMantenimientoService
 	{
 		private readonly SgaDbContext _context;
+		private readonly IEmailService _emailService;
 
-		public ProgramaMantenimientoService(SgaDbContext context)
+		public ProgramaMantenimientoService(SgaDbContext context, IEmailService emailService)
 		{
 			_context = context;
+			_emailService = emailService;
 		}
 
 		public async Task<IEnumerable<ProgramaMantenimientoResponseDto>> ObtenerTodosAsync()
@@ -39,9 +41,11 @@ namespace Sistema_de_Gestion_de_Activos.Services
 			Usuario? tecnicoAsignado = null;
 			if (dto.TecnicoAsignadoId.HasValue)
 			{
-				tecnicoAsignado = await _context.Usuarios.FindAsync(dto.TecnicoAsignadoId.Value);
+				tecnicoAsignado = await _context.Usuarios.Include(u => u.Rol).FirstOrDefaultAsync(u => u.Id == dto.TecnicoAsignadoId.Value);
 				if (tecnicoAsignado == null)
 					throw new KeyNotFoundException("Técnico asignado no encontrado.");
+				if (tecnicoAsignado.Estado != EstadoUsuario.Activo || tecnicoAsignado.Rol.Nombre != NombreRol.Tecnico)
+					throw new InvalidOperationException("El técnico asignado debe tener rol Técnico y estar activo.");
 			}
 
 			var programa = new ProgramaMantenimiento
@@ -146,6 +150,12 @@ namespace Sistema_de_Gestion_de_Activos.Services
 				};
 
 				await _context.Notificaciones.AddAsync(notificacion);
+				var destinatarios = await _context.Usuarios.Include(u => u.Rol)
+					.Where(u => u.Estado == EstadoUsuario.Activo && (u.Rol.Nombre == NombreRol.Administrador || u.Rol.Nombre == NombreRol.Gestor))
+					.Select(u => u.Correo).ToListAsync();
+				foreach (var correo in destinatarios)
+					await _emailService.EnviarAsync(correo, "Mantenimiento próximo a vencer", notificacion.Mensaje);
+				notificacion.EnviadaPorCorreo = destinatarios.Count > 0;
 				generadas++;
 			}
 

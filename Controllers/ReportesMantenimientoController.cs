@@ -102,6 +102,7 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
 
 			var filtro = new ReporteMantenimientoFiltroDto
 			{
+				Desde = desde,
 				Hasta = hasta,
 				CategoriaId = categoriaId,
 				TecnicoId = tecnicoId

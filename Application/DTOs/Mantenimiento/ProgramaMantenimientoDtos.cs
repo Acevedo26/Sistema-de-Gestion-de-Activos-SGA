@@ -13,7 +13,8 @@ namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
 		public int FrecuenciaDias { get; set; }
 		public DateTime ProximaFecha { get; set; }
 		public EstadoPrograma Estado { get; set; }
-		public Guid? TecnicoAsignadoId { get; set; }
+        [Required(ErrorMessage = "El técnico asignado es obligatorio para generar órdenes automáticas.")]
+        public Guid? TecnicoAsignadoId { get; set; }
 		public string? TecnicoAsignadoNombre { get; set; }
 	}
 

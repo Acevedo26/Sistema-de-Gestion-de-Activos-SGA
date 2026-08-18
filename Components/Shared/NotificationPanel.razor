@@ -1,0 +1,36 @@
+@using Microsoft.EntityFrameworkCore
+@using Sistema_de_Gestion_de_Activos.Data
+@inject SgaDbContext DbContext
+
+<div class="relative">
+    <button type="button" class="relative rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-gray-300 dark:hover:bg-gray-800" @onclick="Toggle" aria-label="Notificaciones" title="Notificaciones">
+        <span aria-hidden="true">♧</span>
+        @if (unread > 0) { <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1 text-center text-[10px] font-bold leading-5 text-white">@(unread > 9 ? "9+" : unread)</span> }
+    </button>
+    @if (open)
+    {
+        <section class="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900" aria-label="Panel de notificaciones">
+            <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800"><h2 class="font-semibold">Notificaciones</h2><button class="text-xs font-medium text-primary-600 hover:underline" @onclick="MarkAll">Marcar todas</button></div>
+            <div class="max-h-96 overflow-y-auto">
+                @if (items.Count == 0) { <p class="p-6 text-center text-sm text-gray-500">No hay notificaciones.</p> }
+                @foreach (var item in items)
+                {
+                    <button class="block w-full border-b border-gray-100 px-4 py-3 text-left text-sm transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800 @(item.Leida ? "opacity-60" : "")" @onclick="() => MarkRead(item.Id)">
+                        <span class="block font-medium text-gray-900 dark:text-white">@item.Mensaje</span><span class="mt-1 block text-xs text-gray-500">@item.FechaGeneracion.ToLocalTime().ToString("dd/MM HH:mm")</span>
+                    </button>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private bool open;
+    private int unread;
+    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Notificacion> items = new();
+    protected override async Task OnInitializedAsync() => await Load();
+    private async Task Load() { items = await DbContext.Notificaciones.OrderBy(n => n.Leida).ThenByDescending(n => n.FechaGeneracion).Take(10).ToListAsync(); unread = items.Count(x => !x.Leida); }
+    private async Task Toggle() { open = !open; if (open) await Load(); }
+    private async Task MarkRead(Guid id) { var item = items.First(x => x.Id == id); item.Leida = true; await DbContext.SaveChangesAsync(); await Load(); }
+    private async Task MarkAll() { foreach (var item in items.Where(x => !x.Leida)) item.Leida = true; await DbContext.SaveChangesAsync(); await Load(); }
+}

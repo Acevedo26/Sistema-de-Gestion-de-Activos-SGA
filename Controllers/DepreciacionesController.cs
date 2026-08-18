@@ -1,12 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Sistema_de_Gestion_de_Activos.Application.Interfaces;
 
 namespace Sistema_de_Gestion_de_Activos.Controllers
 {
     [ApiController]
     [Route("api/activos/{activoId}/depreciacion")]
+    [Authorize]
     public class DepreciacionesController : ControllerBase
     {
         private readonly IDepreciacionService _depreciacionService;
@@ -45,8 +47,7 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
         [HttpGet("analisis-integrado")]
         public async Task<IActionResult> ObtenerAnalisisIntegrado(Guid activoId)
         {
-            var relacion = await _analisisService.ObtenerRelacionCostoValorAsync(activoId);
-            return Ok(new { ActivoId = activoId, PorcentajeCostoVsValor = relacion });
+            return Ok(await _analisisService.ObtenerAnalisisAsync(activoId));
         }
     }
 }

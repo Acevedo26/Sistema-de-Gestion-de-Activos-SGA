@@ -31,10 +31,12 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 .Where(d => d.Activo.Estado != Domain.Enums.EstadoActivo.Baja && d.Activo.Estado != Domain.Enums.EstadoActivo.Descartado)
                 .ToListAsync();
 
-            var fechaCorte = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            var fechaCorte = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
             foreach (var dep in depreciaciones)
             {
+                if (await _context.HistorialDepreciaciones.AnyAsync(h => h.DepreciacionId == dep.Id && h.FechaConsulta == fechaCorte)) continue;
                 var snapshot = new HistorialDepreciacion
                 {
                     Id = Guid.NewGuid(),

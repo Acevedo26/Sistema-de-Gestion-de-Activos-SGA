@@ -1,12 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Sistema_de_Gestion_de_Activos.Application.Interfaces;
 
 namespace Sistema_de_Gestion_de_Activos.Controllers
 {
     [ApiController]
     [Route("api/reportes/depreciacion")]
+    [Authorize]
     public class ReportesDepreciacionController : ControllerBase
     {
         private readonly IReporteDepreciacionService _reporteService;

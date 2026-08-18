@@ -1,6 +1,8 @@
 @page "/reportes/depreciacion"
+@page "/depreciacion"
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@attribute [Authorize]
 @inject IReporteDepreciacionService ReporteService
 @inject ICategoriaService CategoriaService
 @inject IJSRuntime JSRuntime

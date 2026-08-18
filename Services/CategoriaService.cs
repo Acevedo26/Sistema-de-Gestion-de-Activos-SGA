@@ -31,6 +31,21 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 .ToListAsync();
         }
 
+        public async Task<CategoriaResponseDto> CrearAsync(CategoriaCreateDto dto)
+        {
+            var name = dto.Nombre.Trim();
+            if (await _context.Categorias.AnyAsync(c => c.Nombre == name))
+                throw new InvalidOperationException("Ya existe una categoría con ese nombre.");
+
+            var categoria = new Domain.Entities.Categoria
+            {
+                Id = Guid.NewGuid(), Nombre = name, VidaUtil = dto.VidaUtil, ValorResidual = dto.ValorResidual
+            };
+            _context.Categorias.Add(categoria);
+            await _context.SaveChangesAsync();
+            return new CategoriaResponseDto { Id = categoria.Id, Nombre = categoria.Nombre, VidaUtil = categoria.VidaUtil, ValorResidual = categoria.ValorResidual };
+        }
+
         public async Task<CategoriaResponseDto> ActualizarVidaUtilAsync(Guid id, int nuevaVidaUtil)
         {
             var categoria = await _context.Categorias.FindAsync(id);
@@ -47,6 +62,17 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 VidaUtil = categoria.VidaUtil,
                 ValorResidual = categoria.ValorResidual
             };
+        }
+
+        public async Task<bool> EliminarAsync(Guid id)
+        {
+            var categoria = await _context.Categorias.FindAsync(id);
+            if (categoria == null) return false;
+            if (await _context.Activos.AnyAsync(a => a.CategoriaId == id))
+                throw new InvalidOperationException("No se puede eliminar una categoría con activos asociados.");
+            _context.Categorias.Remove(categoria);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

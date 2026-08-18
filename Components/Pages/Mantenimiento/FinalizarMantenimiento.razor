@@ -1,5 +1,6 @@
 ﻿@page "/mantenimiento/finalizar/{Id:guid}"
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
+@attribute [Authorize(Roles = "Administrador,Gestor,Tecnico")]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @inject IMantenimientoService MantenimientoService
 @inject NavigationManager Navigation

@@ -1,0 +1,13 @@
+@page "/auditoria"
+@page "/administracion/auditoria"
+@attribute [Authorize(Roles = "Administrador")]
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Auditoria
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IAuditoriaService AuditoriaService
+
+<PageTitle>Auditoría</PageTitle>
+<h1 class="text-2xl font-bold mb-6">Auditoría de operaciones</h1>
+<table class="w-full bg-white shadow rounded"><thead><tr><th class="p-3 text-left">Fecha</th><th class="text-left">Tabla</th><th class="text-left">Acción</th><th class="text-left">Usuario</th></tr></thead><tbody>
+@foreach (var registro in registros) { <tr class="border-t"><td class="p-3">@registro.FechaAccion.ToLocalTime().ToString("g")</td><td>@registro.TablaAfectada</td><td>@registro.Accion</td><td>@registro.UsuarioId</td></tr> }
+</tbody></table>
+@code { private List<AuditoriaResponseDto> registros = new(); protected override async Task OnInitializedAsync() => registros = (await AuditoriaService.ObtenerTodasAsync()).ToList(); }

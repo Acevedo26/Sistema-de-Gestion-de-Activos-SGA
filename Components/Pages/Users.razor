@@ -1,5 +1,7 @@
 @page "/usuarios"
+@page "/administracion/usuarios"
 @layout Layout._Layout
+@attribute [Authorize(Roles = "Administrador")]
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
 @using Microsoft.AspNetCore.Components.Authorization

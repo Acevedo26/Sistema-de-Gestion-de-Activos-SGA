@@ -1,9 +1,11 @@
 @page "/activos/{Id:guid}/depreciacion"
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
+@attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @using Microsoft.EntityFrameworkCore
 @inject IDepreciacionService DepreciacionService
 @inject IHistorialDepreciacionService HistorialService
+@inject IAnalisisIntegradoService AnalisisService
 @inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
 
 <PageTitle>Depreciación del Activo</PageTitle>
@@ -228,22 +230,21 @@
                 AntiguedadMeses = detalleFinanciero.AntiguedadMeses,
                 FechaUltimoCalculo = DateTime.Now
             },
-            AnalisisMantenimiento = new AnalisisMantenimientoViewModel
-            {
-                CostoMantenimientoAcumulado = 3500m,
-                RelacionCostoValor = 45.1m,
-                UmbralAlerta = 40.0m
-            },
+            AnalisisMantenimiento = new AnalisisMantenimientoViewModel(),
             Historial = historial.Select(h => new HistorialDepreciacionViewModel
             {
                 FechaConsulta = h.FechaConsulta,
                 ValorActual = h.ValorActual,
                 DepreciacionAcumulada = h.DepreciacionAcumulada
             }).ToList(),
-            Auditoria = new List<AuditoriaItemViewModel>
-            {
-                new AuditoriaItemViewModel { Fecha = DateTime.Now.AddDays(-2), Usuario = "Sistema", Accion = "Cálculo Mensual", Cambios = "Cálculo automático de depreciación." }
-            }
+            Auditoria = new List<AuditoriaItemViewModel>()
+        };
+        var analisis = await AnalisisService.ObtenerAnalisisAsync(Id);
+        Model.AnalisisMantenimiento = new AnalisisMantenimientoViewModel
+        {
+            CostoMantenimientoAcumulado = analisis.CostoMantenimientoAcumulado,
+            RelacionCostoValor = analisis.RelacionCostoValor,
+            UmbralAlerta = analisis.UmbralAlerta
         };
     }
 

@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Sistema_de_Gestion_de_Activos.Data;
 using System.Text;
 using Sistema_de_Gestion_de_Activos.Application.Interfaces;
@@ -14,10 +17,18 @@ using Sistema_de_Gestion_de_Activos.BackgroundServices;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5000") });
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(sp.GetRequiredService<NavigationManager>().BaseUri)
+});
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddAntiforgery();
+builder.Services.AddCors(options => options.AddPolicy("SgaClient", policy =>
+{
+    var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+    if (origins.Length > 0) policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+}));
 
 // 1. Inyectar HttpContextAccessor y el Interceptor de Auditoría
 builder.Services.AddHttpContextAccessor();
@@ -45,7 +56,7 @@ builder.Services.AddScoped<IActivoService, ActivoService>();
 builder.Services.AddScoped<IMovimientoService, MovimientoService>();
 
 // Servicios de Autenticación, Correo y Auditoría
-builder.Services.AddScoped<IEmailService, EmailServiceMock>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
@@ -64,8 +75,9 @@ builder.Services.AddScoped<IHistorialDepreciacionService, HistorialDepreciacionS
 builder.Services.AddScoped<IReporteDepreciacionService, ReporteDepreciacionService>();
 // builder.Services.AddScoped<IExportacionContableService, ExportacionContableService>();
 builder.Services.AddScoped<IAnalisisIntegradoService, AnalisisIntegradoService>();
+builder.Services.AddScoped<INotificacionDepreciacionService, NotificacionDepreciacionService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add(new AuthorizeFilter()));
 builder.Services.AddEndpointsApiExplorer();
 
 // 3. Configurar Swagger para soportar JWT
@@ -102,6 +114,10 @@ builder.Services.AddSwaggerGen(c =>
 // 4. Configurar Autenticación JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
+if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+{
+    throw new InvalidOperationException("JwtSettings:SecretKey debe configurarse mediante secretos o variables de entorno y tener al menos 32 caracteres.");
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -148,6 +164,7 @@ builder.Services.AddAuthorization(options =>
 // Background Jobs — Módulo 6
 builder.Services.AddHostedService<DepreciacionDailyJob>();
 builder.Services.AddHostedService<SnapshotMensualJob>();
+builder.Services.AddHostedService<MantenimientoDailyJob>();
 
 var app = builder.Build();
 
@@ -155,21 +172,32 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<SgaDbContext>();
-    dbContext.Database.EnsureCreated();
-    
-    DbInitializer.Initialize(dbContext);
+    // If configuration requests EnsureCreated, use it (useful for development without migrations)
+    if (bool.TryParse(app.Configuration["EnsureDatabaseCreated"], out var ensure) && ensure)
+    {
+        dbContext.Database.EnsureCreated();
+    }
+    else
+    {
+        dbContext.Database.Migrate();
+    }
+
+    DbInitializer.Initialize(dbContext, app.Environment.IsDevelopment());
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGA API v1"));
-}
+app.UseExceptionHandler("/error");
+app.UseHsts();
+app.UseHttpsRedirection();
+app.UseCors("SgaClient");
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGA API v1"));
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
+app.MapGet("/error", () => Results.Problem("Ocurrió un error inesperado.")).AllowAnonymous();
 
 app.MapControllers();
 app.MapRazorComponents<Sistema_de_Gestion_de_Activos.Components.App>()

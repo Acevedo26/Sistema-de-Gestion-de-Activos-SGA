@@ -1,0 +1,45 @@
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@inject IActivoService ActivoService
+@inject IMantenimientoService MantenimientoService
+@inject ICategoriaService CategoriaService
+
+<div class="relative hidden w-full max-w-xl md:block">
+    <label class="sr-only" for="global-search">Buscar en el sistema</label>
+    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">⌕</span>
+    <input id="global-search" @bind="query" @bind:event="oninput" @bind:after="Search" autocomplete="off" placeholder="Buscar activos, mantenimientos o categorías..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-100 dark:border-gray-700 dark:bg-gray-800 dark:focus:bg-gray-900 dark:focus:ring-primary-900" />
+    @if (results.Count > 0)
+    {
+        <div class="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+            @foreach (var result in results)
+            {
+                <a href="@result.Url" class="block border-b border-gray-100 px-4 py-3 text-sm last:border-0 hover:bg-primary-50 dark:border-gray-800 dark:hover:bg-primary-950/40">
+                    <span class="font-medium text-gray-900 dark:text-white">@result.Title</span>
+                    <span class="ml-2 text-xs text-gray-500">@result.Type</span>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string query = string.Empty;
+    private List<SearchResult> results = new();
+
+    private async Task Search()
+    {
+        if (query.Trim().Length < 2) { results.Clear(); return; }
+        var term = query.Trim();
+        var activos = await ActivoService.ObtenerTodosAsync();
+        var mantenimientos = await MantenimientoService.ObtenerTodosAsync();
+        var categorias = await CategoriaService.ObtenerTodasAsync();
+        results = activos.Where(x => x.Codigo.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Descripcion.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .Take(4).Select(x => new SearchResult($"{x.Codigo} · {x.Descripcion}", "Activo", $"/activos/{x.Id}/depreciacion"))
+            .Concat(mantenimientos.Where(x => x.ActivoDescripcion.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Descripcion.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .Take(3).Select(x => new SearchResult($"{x.ActivoDescripcion} · {x.Descripcion}", "Mantenimiento", "/mantenimientos")))
+            .Concat(categorias.Where(x => x.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .Take(3).Select(x => new SearchResult(x.Nombre, "Categoría", "/categorias")))
+            .Take(8).ToList();
+    }
+
+    private sealed record SearchResult(string Title, string Type, string Url);
+}
