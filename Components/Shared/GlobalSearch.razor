@@ -3,27 +3,66 @@
 @inject IMantenimientoService MantenimientoService
 @inject ICategoriaService CategoriaService
 
-<div class="relative hidden w-full max-w-xl md:block">
-    <label class="sr-only" for="global-search">Buscar en el sistema</label>
-    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">⌕</span>
-    <input id="global-search" @bind="query" @bind:event="oninput" @bind:after="Search" autocomplete="off" placeholder="Buscar activos, mantenimientos o categorías..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-100 dark:border-gray-700 dark:bg-gray-800 dark:focus:bg-gray-900 dark:focus:ring-primary-900" />
-    @if (results.Count > 0)
-    {
-        <div class="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
-            @foreach (var result in results)
+<button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none" @onclick="Abrir" aria-label="Buscar en el sistema" title="Buscar">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+</button>
+
+@if (_isOpen)
+{
+    <div class="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24" aria-modal="true" role="dialog">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" @onclick="Cerrar"></div>
+        
+        <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10 mx-4">
+            <div class="flex items-center border-b border-gray-100 px-4 dark:border-gray-800">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input id="global-search" @ref="searchInput" @bind="query" @bind:event="oninput" @bind:after="Search" autocomplete="off" placeholder="Buscar activos, mantenimientos o categorías..." class="w-full border-0 bg-transparent py-4 pl-4 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm dark:text-white outline-none" />
+                <button type="button" class="text-gray-400 hover:text-gray-500" @onclick="Cerrar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+            
+            @if (results.Count > 0)
             {
-                <a href="@result.Url" class="block border-b border-gray-100 px-4 py-3 text-sm last:border-0 hover:bg-primary-50 dark:border-gray-800 dark:hover:bg-primary-950/40">
-                    <span class="font-medium text-gray-900 dark:text-white">@result.Title</span>
-                    <span class="ml-2 text-xs text-gray-500">@result.Type</span>
-                </a>
+                <div class="max-h-96 overflow-y-auto py-2">
+                    @foreach (var result in results)
+                    {
+                        <a href="@result.Url" @onclick="Cerrar" class="block px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <span class="font-medium text-gray-900 dark:text-white">@result.Title</span>
+                            <span class="ml-2 text-xs text-gray-500">@result.Type</span>
+                        </a>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(query))
+            {
+                <div class="p-6 text-center text-sm text-gray-500">
+                    No se encontraron resultados para "@query"
+                </div>
             }
         </div>
-    }
-</div>
+    </div>
+}
 
 @code {
+    private bool _isOpen;
     private string query = string.Empty;
     private List<SearchResult> results = new();
+    private ElementReference searchInput;
+
+    private async Task Abrir()
+    {
+        _isOpen = true;
+        query = string.Empty;
+        results.Clear();
+        // focus logic can be handled via JS if needed
+    }
+
+    private void Cerrar()
+    {
+        _isOpen = false;
+        query = string.Empty;
+        results.Clear();
+    }
 
     private async Task Search()
     {
