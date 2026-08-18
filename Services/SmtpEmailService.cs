@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,7 +26,12 @@ public sealed class SmtpEmailService : IEmailService
         var from = _configuration["Smtp:From"];
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
         {
-            _logger.LogWarning("SMTP no configurado; el correo para {Destinatario} no fue enviado.", destinatario);
+            _logger.LogWarning("==========================================================");
+            _logger.LogWarning("SMTP no configurado. Simulando envÃ­o de correo...");
+            _logger.LogWarning("Destinatario: {Destinatario}", destinatario);
+            _logger.LogWarning("Asunto: {Asunto}", asunto);
+            _logger.LogWarning("Contenido HTML: {Html}", html);
+            _logger.LogWarning("==========================================================");
             return;
         }
 
