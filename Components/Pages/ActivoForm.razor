@@ -1,8 +1,9 @@
-﻿@page "/activos/nuevo"
+@page "/activos/nuevo"
 @page "/activos/editar/{Id:guid}"
 @attribute [Authorize(Roles = "Administrador,Gestor")]
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.ICategoriaService CategoriaService
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
 @inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
@@ -173,12 +174,12 @@
         
         if (form.CategoriaId == Guid.Empty)
         {
-            error = "Seleccione una categoría válida.";
+            await AlertService.ShowWarningAsync("Atención", "Seleccione una categoría válida.");
             return;
         }
         if (form.UbicacionId == Guid.Empty)
         {
-            error = "Seleccione una ubicación válida.";
+            await AlertService.ShowWarningAsync("Atención", "Seleccione una ubicación válida.");
             return;
         }
 
@@ -187,7 +188,6 @@
         {
             if (Id.HasValue)
             {
-                // Note: For Edit, we map to ActivoUpdateDto
                 var updateDto = new ActivoUpdateDto
                 {
                     Descripcion = form.Descripcion,
@@ -200,16 +200,18 @@
                     Estado = existingState, ResponsableId = form.ResponsableId
                 };
                 await ActivoService.ActualizarActivoAsync(Id.Value, updateDto);
+                await AlertService.ShowSuccessAsync("Guardado", "Activo actualizado correctamente.");
             }
             else
             {
                 await ActivoService.CrearActivoAsync(form);
+                await AlertService.ShowSuccessAsync("Guardado", "Activo creado correctamente.");
             }
             Navigation.NavigateTo("/activos");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            await AlertService.ShowErrorAsync("Error al guardar", ex.Message);
         }
         finally
         {

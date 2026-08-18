@@ -62,6 +62,7 @@ builder.Services.AddTransient<IAuditoriaService, AuditoriaService>();
 
 // Servicios del Módulo 3 — Mantenimiento
 builder.Services.AddTransient<IMantenimientoService, MantenimientoService>();
+builder.Services.AddScoped<Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService, Sistema_de_Gestion_de_Activos.Services.AlertService>();
 builder.Services.AddTransient<IProgramaMantenimientoService, ProgramaMantenimientoService>();
 
 // Servicios del Módulo 4 — Reportes y Análisis

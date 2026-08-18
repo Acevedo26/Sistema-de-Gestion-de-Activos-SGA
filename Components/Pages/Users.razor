@@ -6,6 +6,7 @@
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
 @using Microsoft.AspNetCore.Components.Authorization
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 
 @code {
     private IEnumerable<UsuarioResponseDto> usuarios = Array.Empty<UsuarioResponseDto>();
@@ -77,21 +78,28 @@
 
     private async Task ToggleEstado(UsuarioResponseDto usuario)
     {
-        try
+        string action = usuario.Estado == EstadoUsuario.Activo ? "desactivar" : "activar";
+        string title = usuario.Estado == EstadoUsuario.Activo ? "Desactivar usuario" : "Activar usuario";
+        var confirmed = await AlertService.ConfirmAsync(
+            title,
+            $"¿Está seguro que desea {action} al usuario {usuario.Nombre}?"
+        );
+        if (confirmed)
         {
-            if (usuario.Estado == EstadoUsuario.Activo)
+            try
             {
-                await UsuarioService.DesactivarUsuarioAsync(usuario.Id);
+                if (usuario.Estado == EstadoUsuario.Activo)
+                    await UsuarioService.DesactivarUsuarioAsync(usuario.Id);
+                else
+                    await UsuarioService.ActivarUsuarioAsync(usuario.Id);
+                
+                await AlertService.ShowSuccessAsync("Operación exitosa", "Estado de usuario actualizado correctamente.");
+                await LoadData();
             }
-            else
+            catch (Exception ex)
             {
-                await UsuarioService.ActivarUsuarioAsync(usuario.Id);
+                await AlertService.ShowErrorAsync("Error", ex.Message);
             }
-            await LoadData();
-        }
-        catch
-        {
-            // Error handling
         }
     }
 

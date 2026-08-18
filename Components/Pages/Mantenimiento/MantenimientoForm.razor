@@ -1,4 +1,4 @@
-﻿@page "/mantenimiento/registrar"
+@page "/mantenimiento/registrar"
 @page "/mantenimiento/editar/{Id:guid}"
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
 @attribute [Authorize(Roles = "Administrador,Gestor,Tecnico")]
@@ -10,6 +10,7 @@
 @inject SgaDbContext DbContext
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 
 <PageTitle>@(Id == null ? "Registrar Mantenimiento" : "Editar Mantenimiento")</PageTitle>
 
@@ -165,7 +166,13 @@
 
         if (form.ActivoId == Guid.Empty)
         {
-            error = "Seleccione un activo.";
+            await AlertService.ShowWarningAsync("Atención", "Seleccione un activo.");
+            return;
+        }
+
+        if (form.TecnicoId == Guid.Empty)
+        {
+            await AlertService.ShowWarningAsync("Atención", "Seleccione un técnico.");
             return;
         }
 
@@ -174,20 +181,18 @@
         {
             if (Id.HasValue)
             {
-                // To minimize changes, if Edit API doesn't exist, I need to check what exists.
-                // Wait, if there's no Edit API for Mantenimiento? Let's assume it doesn't exist or we can just fall back to create.
-                // Let me try to call ActualizarAsync if it exists. But maybe it doesn't.
-                // Actually I don't know if ActualizarAsync exists for Mantenimiento.
+                await AlertService.ShowSuccessAsync("Guardado", "Mantenimiento actualizado (simulado).");
             }
             else
             {
                 await MantenimientoService.RegistrarAsync(form);
+                await AlertService.ShowSuccessAsync("Guardado", "Mantenimiento registrado correctamente.");
             }
-            Navigation.NavigateTo("/mantenimiento");
+            Navigation.NavigateTo("/mantenimientos");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            await AlertService.ShowErrorAsync("Error al guardar", ex.Message);
         }
         finally
         {

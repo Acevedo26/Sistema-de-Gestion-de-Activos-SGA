@@ -5,6 +5,7 @@
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
 @inject IMantenimientoService MantenimientoService
 @inject NavigationManager Navigation
+@inject IAlertService AlertService
 
 <PageTitle>Mantenimiento de Activos</PageTitle>
 
@@ -101,7 +102,7 @@
                                         {
                                             <button class="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { IrAFinalizar(m.Id); ToggleMenu(null); }">Finalizar</button>
                                         }
-                                        <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { confirmId = m.Id; showConfirm = true; ToggleMenu(null); }">Eliminar</button>
+                                        <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => EliminarPrompt(m.Id)">Eliminar</button>
                                     </div>
                                 }
                             </td>
@@ -145,13 +146,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nuevo Mantenimiento
     </button>
 </div>
-<Modal @bind-IsOpen="showConfirm" Title="Confirmar eliminación">
-    <p class="text-sm text-gray-600 dark:text-gray-300">¿Está seguro que desea eliminar este registro de mantenimiento? Esta acción no se puede deshacer.</p>
-    <div class="mt-6 flex justify-end gap-2">
-        <button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => { confirmId = null; showConfirm = false; }">Cancelar</button>
-        <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="Eliminar">Eliminar</button>
-    </div>
-</Modal>
+
 
 
 @code {
@@ -160,9 +155,7 @@
     private int page = 1;
     private bool showFilters = false;
     private Guid? openMenuId;
-    private Guid? confirmId;
-    private bool showConfirm;
-
+        
     private IEnumerable<MantenimientoResponseDto> Filtrados => (mantenimientos ?? Enumerable.Empty<MantenimientoResponseDto>()).Where(m =>
         (string.IsNullOrWhiteSpace(search) || m.ActivoDescripcion.Contains(search, StringComparison.OrdinalIgnoreCase) || m.TecnicoNombre.Contains(search, StringComparison.OrdinalIgnoreCase) || m.Descripcion.Contains(search, StringComparison.OrdinalIgnoreCase)) &&
         (string.IsNullOrEmpty(tipoFiltro) || m.Tipo.ToString() == tipoFiltro) &&
@@ -182,12 +175,17 @@
     private void IrARegistrar() => Navigation.NavigateTo("/mantenimiento/registrar");
 
     private void ResetPage() => page = 1;
-    private async Task Eliminar()
+    private async Task EliminarPrompt(Guid id)
     {
-        if (confirmId.HasValue)
+        var confirmed = await AlertService.ConfirmAsync(
+            "Confirmar eliminación",
+            "¿Está seguro que desea eliminar este registro de mantenimiento? Esta acción no se puede deshacer."
+        );
+        if (confirmed)
         {
-            await MantenimientoService.EliminarAsync(confirmId.Value);
-            confirmId = null; showConfirm = false; mantenimientos = (await MantenimientoService.ObtenerTodosAsync()).ToList();
+            await MantenimientoService.EliminarAsync(id);
+            await AlertService.ShowSuccessAsync("Eliminado", "El mantenimiento ha sido eliminado.");
+            mantenimientos = (await MantenimientoService.ObtenerTodosAsync()).ToList();
         }
     }
 

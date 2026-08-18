@@ -6,6 +6,7 @@
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
 @inject IActivoService ActivoService
 @inject ICategoriaService CategoriaService
+@inject IAlertService AlertService
 
 <PageTitle>Activos</PageTitle>
 
@@ -109,7 +110,7 @@
                                     <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
                                         <a href="/activos/@asset.Id/depreciacion" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</a>
                                         <a href="/activos/editar/@asset.Id" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Editar</a>
-                                        <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { confirmId = asset.Id; ToggleMenu(null); }">Eliminar</button>
+                                        <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => DeactivatePrompt(asset.Id, asset.Codigo)">Eliminar</button>
                                     </div>
                                 }
                             </div>
@@ -147,12 +148,11 @@
 
 <!-- Modals -->
 
-<Modal @bind-IsOpen="showConfirm" Title="Confirmar baja"><p class="text-sm text-gray-600 dark:text-gray-300">El activo se desactivará y dejará de estar disponible para nuevas asignaciones.</p><div class="mt-6 flex justify-end gap-2"><button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => confirmId = null">Cancelar</button><button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="Deactivate">Dar de baja</button></div></Modal>
+
 
 @code {
     private readonly List<ActivoResponseDto> assets = new(); private List<CategoriaResponseDto> categories = new(); private ActivoRequestDto form = new() { FechaAdquisicion = DateTime.Today }; private ActivoResponseDto? editing;
-    private string search = "", categoryFilter = "", stateFilter = "", locationText = "", sort = nameof(ActivoResponseDto.Codigo), message = ""; private DateTime? from; private EstadoActivo editState; private int page = 1; private bool descending, showForm, isError; private Guid? confirmId;
-    
+    private string search = "", categoryFilter = "", stateFilter = "", locationText = "", sort = nameof(ActivoResponseDto.Codigo), message = ""; private DateTime? from; private EstadoActivo editState; private int page = 1; private bool descending, showForm, isError;     
     private bool showFilters = false;
     private Guid? openMenuId;
 
@@ -175,7 +175,7 @@
         return dotColors[index];
     }
 
-    private bool showConfirm { get => confirmId.HasValue; set { if (!value) confirmId = null; } }
+    
     protected override async Task OnInitializedAsync() { categories = (await CategoriaService.ObtenerTodasAsync()).ToList(); await Load(); }
     private async Task Load() { assets.Clear(); assets.AddRange(await ActivoService.ObtenerTodosAsync()); ResetPage(); }
     private IEnumerable<ActivoResponseDto> FilteredAssets => Sort(assets.Where(x => (string.IsNullOrWhiteSpace(search) || x.Codigo.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Descripcion.Contains(search, StringComparison.OrdinalIgnoreCase) || (x.NumeroSerie?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)) && (string.IsNullOrEmpty(categoryFilter) || x.CategoriaId.ToString() == categoryFilter) && (string.IsNullOrEmpty(stateFilter) || x.Estado.ToString() == stateFilter) && (!from.HasValue || x.FechaAdquisicion.Date >= from.Value.Date)));
@@ -190,5 +190,19 @@
     private void OpenCreate() { editing = null; form = new() { FechaAdquisicion = DateTime.Today }; locationText = ""; showForm = true; }
     private void OpenEdit(ActivoResponseDto asset) { editing = asset; form = new() { Codigo = asset.Codigo, Descripcion = asset.Descripcion, CategoriaId = asset.CategoriaId, UbicacionId = asset.UbicacionId, CostoInicial = asset.CostoInicial, FechaAdquisicion = asset.FechaAdquisicion, Proveedor = asset.Proveedor, NumeroSerie = asset.NumeroSerie }; locationText = asset.UbicacionId.ToString(); editState = asset.Estado; showForm = true; }
     private async Task Save() { try { if (!Guid.TryParse(locationText, out var location)) throw new InvalidOperationException("Seleccione una ubicación válida."); form.UbicacionId = location; if (form.CategoriaId == Guid.Empty) throw new InvalidOperationException("Seleccione una categoría."); if (editing is null) await ActivoService.CrearActivoAsync(form); else await ActivoService.ActualizarActivoAsync(editing.Id, new ActivoUpdateDto { Descripcion = form.Descripcion, CategoriaId = form.CategoriaId, UbicacionId = location, CostoInicial = form.CostoInicial, FechaAdquisicion = form.FechaAdquisicion, Proveedor = form.Proveedor, NumeroSerie = form.NumeroSerie, Estado = editState }); showForm = false; isError = false; message = "Activo guardado correctamente."; await Load(); } catch (Exception ex) { isError = true; message = ex.Message; } }
-    private async Task Deactivate() { if (!confirmId.HasValue) return; try { await ActivoService.DesactivarActivoAsync(confirmId.Value); message = "Activo dado de baja."; isError = false; await Load(); } catch (Exception ex) { message = ex.Message; isError = true; } finally { confirmId = null; } }
+    private async Task DeactivatePrompt(Guid id, string codigo) {
+        var confirmed = await AlertService.ConfirmAsync(
+            "Confirmar baja",
+            $"¿Desea dar de baja el activo {codigo}? Dejará de estar disponible para nuevas asignaciones."
+        );
+        if (confirmed) {
+            try {
+                await ActivoService.DesactivarActivoAsync(id);
+                await AlertService.ShowSuccessAsync("Éxito", "Activo dado de baja correctamente.");
+                await Load();
+            } catch (Exception ex) {
+                await AlertService.ShowErrorAsync("Error", ex.Message);
+            }
+        }
+    }
 }

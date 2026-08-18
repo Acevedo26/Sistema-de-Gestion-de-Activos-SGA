@@ -3,6 +3,7 @@
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @inject ICategoriaService CategoriaService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 
 <PageTitle>Categorías de activos</PageTitle>
 
@@ -76,7 +77,7 @@
                                         <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
                                             
                                             <a href="/categorias/editar/@c.Id" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Editar</a>
-                                            <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => { categoriaAEliminar = c; mostrarEliminar = true; ToggleMenu(null); }">Eliminar</button>
+                                            <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => EliminarPrompt(c)">Eliminar</button>
                                         </div>
                                     }
                                 }
@@ -167,7 +168,7 @@
 
 
 
-<Modal @bind-IsOpen="mostrarEliminar" Title="Eliminar categoría"><p class="text-sm text-gray-600 dark:text-gray-300">¿Desea eliminar <strong>@categoriaAEliminar?.Nombre</strong>? Solo será posible si no tiene activos asociados.</p><div class="mt-6 flex justify-end gap-2"><button class="rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800" @onclick="() => mostrarEliminar = false">Cancelar</button><button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700" @onclick="EliminarCategoria">Eliminar</button></div></Modal>
+
 
 @code {
     private CategoriaConfigViewModel Model = new();
@@ -177,8 +178,8 @@
     
     private bool EsAdmin = true;
     private bool mostrarNueva;
-    private bool mostrarEliminar;
-    private CategoriaItemViewModel? categoriaAEliminar;
+    
+    
     private CategoriaCreateDto nuevaCategoria = new();
 
     private string search = "";
@@ -245,11 +246,21 @@
         await CargarCategorias();
     }
 
-    private async Task EliminarCategoria()
+    private async Task EliminarPrompt(CategoriaItemViewModel cat)
     {
-        if (categoriaAEliminar is not null) await CategoriaService.EliminarAsync(categoriaAEliminar.Id);
-        categoriaAEliminar = null;
-        mostrarEliminar = false;
-        await CargarCategorias();
+        var confirmed = await AlertService.ConfirmAsync(
+            "Eliminar categoría",
+            $"¿Desea eliminar la categoría {cat.Nombre}? Solo será posible si no tiene activos asociados."
+        );
+        if (confirmed)
+        {
+            try {
+                await CategoriaService.EliminarAsync(cat.Id);
+                await AlertService.ShowSuccessAsync("Eliminada", "La categoría fue eliminada con éxito.");
+                await CargarCategorias();
+            } catch(Exception ex) {
+                await AlertService.ShowErrorAsync("Error al eliminar", ex.Message);
+            }
+        }
     }
 }

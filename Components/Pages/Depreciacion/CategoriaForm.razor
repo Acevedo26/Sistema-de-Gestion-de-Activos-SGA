@@ -1,8 +1,9 @@
-﻿@page "/categorias/nueva"
+@page "/categorias/nueva"
 @page "/categorias/editar/{Id:guid}"
 @attribute [Authorize(Roles = "Administrador,Gestor")]
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.ICategoriaService CategoriaService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
 
 <PageTitle>@(Id == null ? "Nueva Categoría" : "Editar Vida Útil")</PageTitle>
@@ -95,16 +96,18 @@
             if (Id.HasValue)
             {
                 await CategoriaService.ActualizarVidaUtilAsync(Id.Value, form.VidaUtil);
+                await AlertService.ShowSuccessAsync("Guardado", "Vida útil actualizada correctamente.");
             }
             else
             {
                 await CategoriaService.CrearAsync(form);
+                await AlertService.ShowSuccessAsync("Guardado", "Categoría creada correctamente.");
             }
-            Navigation.NavigateTo("/depreciacion/categorias");
+            Navigation.NavigateTo("/categorias");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            await AlertService.ShowErrorAsync("Error al guardar", ex.Message);
         }
         finally
         {
