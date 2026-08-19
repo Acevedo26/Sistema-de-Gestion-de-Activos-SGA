@@ -1,10 +1,49 @@
 ﻿@page "/administracion"
 @attribute [Authorize(Roles = "Administrador")]
+@inject NavigationManager Navigation
 
 <PageTitle>Administración</PageTitle>
-<h1 class="text-2xl font-bold mb-6">Administración</h1>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/usuarios"><h2 class="font-semibold">Usuarios y roles</h2><p>Crear, actualizar, activar y desactivar usuarios.</p></a>
-    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/ubicaciones"><h2 class="font-semibold">Ubicaciones</h2><p>Administrar edificios y oficinas.</p></a>
-    <a class="bg-white rounded-lg p-5 shadow hover:bg-gray-50" href="/auditoria"><h2 class="font-semibold">Auditoría</h2><p>Consultar operaciones críticas.</p></a>
+<div class="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+    <h1 class="text-2xl font-bold mb-6">Administración</h1>
+</div>
+
+<!-- Tarjetas -->
+<div class="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+
+    <!-- Usuarios y roles -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/usuarios")'>
+        <div class="flex items-center gap-3 mb-2 text-gray-500 dark:text-gray-400 font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M7 21v-2a4 4 0 0 1 3-3.87" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+            Usuarios y roles
+        </div>
+    </div>
+
+    <!-- Ubicaciones -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/ubicaciones")'>
+        <div class="flex items-center gap-3 mb-4 text-gray-500 dark:text-gray-400 font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 21c-4.97-5.5-7-8.5-7-11a7 7 0 1 1 14 0c0 2.5-2.03 5.5-7 11z" />
+                <circle cx="12" cy="10" r="2" />
+            </svg>
+            Ubicaciones
+        </div>
+    </div>
+
+    <!-- Auditoría -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/auditoria")'>
+        <div class="flex items-center gap-3 mb-2 text-gray-500 dark:text-gray-400 font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6" />
+                <path d="M9 16h6" />
+                <rect x="3" y="4" width="18" height="16" rx="2" ry="2" />
+                <circle cx="15" cy="15" r="3" />
+                <line x1="17" y1="17" x2="19" y2="19" />
+            </svg>
+            Auditoría
+        </div>
+    </div>
 </div>

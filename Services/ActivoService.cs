@@ -43,6 +43,35 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 .ToListAsync();
         }
 
+        public async Task<ActivoResponseDto?> ObtenerPorIdAsync(Guid id)
+        {
+            var activo = await _context.Activos
+                .Include(a => a.Depreciacion)
+                .Include(a => a.Responsable)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (activo == null)
+                return null;
+
+            return new ActivoResponseDto
+            {
+                Id = activo.Id,
+                Codigo = activo.Codigo,
+                Descripcion = activo.Descripcion,
+                CategoriaId = activo.CategoriaId,
+                UbicacionId = activo.UbicacionId,
+                FechaAdquisicion = activo.FechaAdquisicion,
+                CostoInicial = activo.CostoInicial,
+                Proveedor = activo.Proveedor,
+                NumeroSerie = activo.NumeroSerie,
+                Estado = activo.Estado,
+                ResponsableId = activo.ResponsableId,
+                ResponsableNombre = activo.Responsable != null ? activo.Responsable.Nombre : null,
+                ValorActual = activo.Depreciacion != null ? activo.Depreciacion.ValorActual : activo.CostoInicial,
+                PorcentajeDepreciacion = activo.Depreciacion != null ? activo.Depreciacion.PorcentajeConsumido : 0
+            };
+        }
+
         public async Task<ActivoResponseDto> CrearActivoAsync(ActivoRequestDto dto)
         {
             if (dto.CostoInicial <= 0) throw new InvalidOperationException("El costo inicial debe ser mayor que cero.");

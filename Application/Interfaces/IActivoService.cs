@@ -1,4 +1,4 @@
-﻿using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos;
+using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos;
 
 namespace Sistema_de_Gestion_de_Activos.Application.Interfaces
 {
@@ -11,5 +11,7 @@ namespace Sistema_de_Gestion_de_Activos.Application.Interfaces
         Task<bool> DesactivarActivoAsync(Guid id);
 
         Task<IEnumerable<ActivoResponseDto>> ObtenerTodosAsync();
+        
+        Task<ActivoResponseDto?> ObtenerPorIdAsync(Guid id);
     }
 }

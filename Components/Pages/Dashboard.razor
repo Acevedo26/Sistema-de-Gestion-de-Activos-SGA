@@ -1,10 +1,11 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @page "/"
 @attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Dashboard
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @inject IDashboardService DashboardService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>Dashboard - SGA</PageTitle>
@@ -41,58 +42,55 @@ else
     <div class="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
         
         <!-- Total de Activos -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/activos")'>
-            <div class="flex items-center gap-3 mb-2 text-gray-500 dark:text-gray-400 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                Total de Activos
-            </div>
-            <div class="flex items-end justify-between">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 w-full cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/activos")'>
+            <div class="flex justify-between items-start">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">@Kpis.TotalActivos</h2>
-                    <p class="text-sm mt-1 @(Kpis.ActivosNuevosMes > 0 ? "text-green-500" : "text-gray-500 dark:text-gray-400")">
-                        @(Kpis.ActivosNuevosMes > 0 ? $"+{Kpis.ActivosNuevosMes} activos este mes" : "Sin activos nuevos este mes")
-                    </p>
+                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">@Kpis.TotalActivos</h5>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total de Activos</p>
                 </div>
-                <!-- Dynamic Sparkline --><svg class="w-16 h-8 text-primary-500 opacity-60" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="@GetSparklineFillInt(Kpis.TendenciaActivos)" fill="currentColor" fill-opacity="0.1"/><path d="@GetSparklinePathInt(Kpis.TendenciaActivos)" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                <div class="flex items-center px-2.5 py-0.5 font-medium text-green-500 text-center">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4"/></svg>
+                    @(Kpis.ActivosNuevosMes > 0 ? $"+{Kpis.ActivosNuevosMes}" : "0")
+                </div>
             </div>
+            <div id="chart-activos" class="py-4 md:py-6"></div>
         </div>
 
         <!-- Estado de Depreciación -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between">
-            <div class="flex items-center gap-3 mb-4 text-gray-500 dark:text-gray-400 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                Estado de Depreciación
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 w-full relative">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex justify-center items-center">
+                    <h5 class="text-xl font-semibold text-gray-900 dark:text-white me-1">Estado de Depreciación</h5>
+                    <svg data-popover-target="depre-info" data-popover-placement="bottom" class="w-4 h-4 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.529 9.988a2.502 2.502 0 1 1 5 .191A2.441 2.441 0 0 1 12 12.582V14m-.01 3.008H12M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </div>
             </div>
-            <div class="flex items-center gap-6">
-                                <!-- SVG Donut Chart -->
-                <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
-                    <svg viewBox="0 0 120 120" class="w-20 h-20 transform -rotate-90">
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" class="text-gray-200 dark:text-gray-700" />
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" class="text-primary-600 transition-all duration-1000 ease-out"
-                                stroke-dasharray="339.292" stroke-dashoffset="@(339.292 * (1 - (double.IsNaN(Kpis.PorcentajeDepreciados) || double.IsInfinity(Kpis.PorcentajeDepreciados) ? 0 : Kpis.PorcentajeDepreciados / 100.0)))" stroke-linecap="round" />
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center flex-col">
-                        <span class="text-xs font-bold text-gray-900 dark:text-white">@(double.IsNaN(Kpis.PorcentajeDepreciados) || double.IsInfinity(Kpis.PorcentajeDepreciados) ? 0 : Math.Round(Kpis.PorcentajeDepreciados))%</span>
+
+            <div>
+                <div class="flex" id="devices">
+                    <div class="flex items-center me-4">
+                        <span class="w-3 h-3 rounded-full bg-primary-600 me-2"></span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">Depreciados</span>
+                    </div>
+                    <div class="flex items-center me-4">
+                        <span class="w-3 h-3 rounded-full bg-gray-200 dark:bg-gray-600 me-2"></span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">En Vida Útil</span>
                     </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">@Kpis.ActivosDepreciados <span class="text-sm font-normal text-gray-500">activos</span></h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-1">completamente depreciados o al final de su vida útil.</p>
-                </div>
             </div>
+
+            <!-- Donut Chart -->
+            <div class="py-2" id="donut-chart"></div>
         </div>
 
         <!-- Valor Actual Total -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between">
-            <div class="flex items-center gap-3 mb-2 text-gray-500 dark:text-gray-400 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 18V6"></path></svg>
-                Valor Actual Total
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 w-full cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/activos")'>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">@Sistema_de_Gestion_de_Activos.Services.DashboardService.FormatearMoneda(Kpis.ValorActualTotal)</h5>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Valor Actual Total</p>
+                </div>
             </div>
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">@Sistema_de_Gestion_de_Activos.Services.DashboardService.FormatearMoneda(Kpis.ValorActualTotal)</h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Depreciación acumulada: @Sistema_de_Gestion_de_Activos.Services.DashboardService.FormatearMoneda(Kpis.DepreciacionAcumuladaTotal)</p>
-            </div>
-            <!-- Dynamic Sparkline Fill --><svg class="w-full h-8 text-primary-500 opacity-30 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="@GetSparklineFill(Kpis.TendenciaValor)" fill="currentColor" fill-opacity="0.3"/></svg>
+            <div id="chart-valor" class="py-4 md:py-6"></div>
         </div>
             </div>
 
@@ -195,7 +193,7 @@ else
         await LoadDashboardData();
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
@@ -205,9 +203,23 @@ else
                 {
                     await LoadDashboardData();
                     StateHasChanged();
+                    await RenderCharts();
                 });
             }, null, 60000, 60000);
         }
+        
+        await RenderCharts();
+    }
+
+    private async Task RenderCharts()
+    {
+        if (Kpis == null) return;
+        var labels = new[] { "Hace 5m", "Hace 4m", "Hace 3m", "Hace 2m", "Hace 1m", "Mes actual" };
+        await JS.InvokeVoidAsync("renderFlowbiteAreaChart", "chart-activos", Kpis.TendenciaActivos, labels, null);
+        await JS.InvokeVoidAsync("renderFlowbiteAreaChart", "chart-valor", Kpis.TendenciaValor, labels, "₡");
+        
+        var enVidaUtil = Kpis.TotalActivos - Kpis.ActivosDepreciados;
+        await JS.InvokeVoidAsync("renderFlowbiteDonutChart", "donut-chart", new[] { Kpis.ActivosDepreciados, enVidaUtil }, new[] { "Depreciados", "En Vida Útil" });
     }
 
     private async Task ReloadManual()
@@ -217,6 +229,7 @@ else
         await LoadDashboardData();
         isReloading = false;
         StateHasChanged();
+        await RenderCharts();
     }
 
     private async Task LoadDashboardData()
@@ -225,28 +238,6 @@ else
         Alertas = await DashboardService.GetAlertasMantenimientoAsync();
         Actividades = await DashboardService.GetActividadRecienteAsync();
     }
-
-        private string GetSparklinePath(List<decimal> values)
-    {
-        if (values == null || values.Count < 2) return "M0 30 L100 30";
-        var max = values.Max();
-        var min = values.Min();
-        if (max == min) return "M0 15 L100 15";
-        var width = 100.0m;
-        var height = 28.0m;
-        var stepX = width / (values.Count - 1);
-        var points = new List<string>();
-        for (int i = 0; i < values.Count; i++)
-        {
-            var x = i * stepX;
-            var y = 30.0m - (((values[i] - min) / (max - min)) * height);
-            points.Add($"{(i == 0 ? "M" : "L")}{x.ToString(System.Globalization.CultureInfo.InvariantCulture)} {y.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        }
-        return string.Join(" ", points);
-    }
-    private string GetSparklinePathInt(List<int> values) => GetSparklinePath(values?.Select(v => (decimal)v).ToList() ?? new());
-    private string GetSparklineFill(List<decimal> values) => $"{GetSparklinePath(values)} V30 H0 Z";
-    private string GetSparklineFillInt(List<int> values) => GetSparklineFill(values?.Select(v => (decimal)v).ToList() ?? new());
 
     public void Dispose()
     {

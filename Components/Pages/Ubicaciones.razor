@@ -1,4 +1,4 @@
-﻿@page "/ubicaciones"
+@page "/ubicaciones"
 @using Sistema_de_Gestion_de_Activos.Domain.Entities
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @attribute [Authorize(Roles = "Administrador,Gestor")]
@@ -113,7 +113,7 @@
 </div>
 
 @code {
-    private List<Ubicacion> ubicaciones;
+    private List<Ubicacion> ubicaciones = new();
     private Ubicacion form = new();
     private Guid? editingId;
     private bool isSubmitting;
@@ -199,7 +199,7 @@
                     await AlertService.ShowErrorAsync("Error", "No se pudo eliminar.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await AlertService.ShowErrorAsync("Error", "No se puede eliminar la ubicación porque está en uso por activos.");
             }

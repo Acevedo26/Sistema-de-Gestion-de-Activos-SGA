@@ -12,13 +12,9 @@
     <div class="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24" aria-modal="true" role="dialog">
         <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" @onclick="Cerrar"></div>
         
-        <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10 mx-4">
+        <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10 mx-4">
             <div class="flex items-center border-b border-gray-100 px-4 dark:border-gray-800">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input id="global-search" @ref="searchInput" @bind="query" @bind:event="oninput" @bind:after="Search" autocomplete="off" placeholder="Buscar activos, mantenimientos o categorías..." class="w-full border-0 bg-transparent py-4 pl-4 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm dark:text-white outline-none" />
-                <button type="button" class="text-gray-400 hover:text-gray-500" @onclick="Cerrar">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
             </div>
             
             @if (results.Count > 0)

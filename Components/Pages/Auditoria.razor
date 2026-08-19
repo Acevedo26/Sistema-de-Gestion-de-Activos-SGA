@@ -7,7 +7,27 @@
 
 <PageTitle>Auditoría</PageTitle>
 <h1 class="text-2xl font-bold mb-6">Auditoría de operaciones</h1>
-<table class="w-full bg-white shadow rounded"><thead><tr><th class="p-3 text-left">Fecha</th><th class="text-left">Tabla</th><th class="text-left">Acción</th><th class="text-left">Usuario</th></tr></thead><tbody>
-@foreach (var registro in registros) { <tr class="border-t"><td class="p-3">@registro.FechaAccion.ToLocalTime().ToString("g")</td><td>@registro.TablaAfectada</td><td>@registro.Accion</td><td>@registro.UsuarioId</td></tr> }
-</tbody></table>
-@code { private List<AuditoriaResponseDto> registros = new(); protected override async Task OnInitializedAsync() => registros = (await AuditoriaService.ObtenerTodasAsync()).ToList(); }
+<table class="w-full text-left text-sm">
+    <thead class="border-b border-gray-200 bg-white text-gray-500 dark:border-gray-800 dark:bg-gray-900">
+        <tr>
+            <th class="px-6 py-4 font-medium">Fecha</th>
+            <th class="px-6 py-4 font-medium">Tabla</th>
+            <th class="px-6 py-4 font-medium">Acción</th>
+            <th class="px-6 py-4 font-medium">Usuario</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+        @foreach (var registro in registros)
+        {
+            <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">@registro.FechaAccion.ToLocalTime().ToString("g")</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">@registro.TablaAfectada</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">@registro.Accion</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">@registro.UsuarioId</td>
+            </tr>
+        }
+    </tbody>
+</table>
+@code {
+    private List<AuditoriaResponseDto> registros = new(); protected override async Task OnInitializedAsync() => registros = (await AuditoriaService.ObtenerTodasAsync()).ToList();
+}

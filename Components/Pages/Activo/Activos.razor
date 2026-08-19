@@ -37,11 +37,6 @@
         <button class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => showFilters = !showFilters">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtros
         </button>
-        
-        <!-- Descargar -->
-        <button @onclick='() => Navigation.NavigateTo("/reportes/depreciacion", true)' class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar
-        </button>
     </div>
     
     @if (showFilters) {
@@ -65,7 +60,6 @@
         <table class="w-full text-left text-sm">
             <thead class="border-b border-gray-200 bg-white text-gray-500 dark:border-gray-800 dark:bg-gray-900">
                 <tr>
-                    <th class="px-6 py-4 font-medium"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></th>
                     <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.Codigo))">Código @SortMark(nameof(ActivoResponseDto.Codigo))</button></th>
                     <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.Descripcion))">Descripción @SortMark(nameof(ActivoResponseDto.Descripcion))</button></th>
                     <th class="px-6 py-4 font-medium">Categoría</th>
@@ -78,7 +72,6 @@
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                 @foreach (var asset in PagedAssets) {
                     <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></td>
                         <td class="px-6 py-4 text-gray-500 dark:text-gray-400 font-mono text-xs">@asset.Codigo</td>
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@asset.Descripcion</td>
                         <td class="px-6 py-4">
@@ -109,7 +102,7 @@
                                 <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @onclick="() => ToggleMenu(asset.Id)"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
                                 @if (openMenuId == asset.Id) {
                                     <div class="absolute right-0 top-full mt-1 z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700 text-left">
-                                        <a href="/activos/@asset.Id/depreciacion" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</a>
+                                        <a href="/activos/detalle/@asset.Id" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Ver detalle</a>
                                         <a href="/activos/editar/@asset.Id" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="() => ToggleMenu(null)">Editar</a>
                                         <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700" @onclick="() => DeactivatePrompt(asset.Id, asset.Codigo)">Eliminar</button>
                                     </div>
@@ -153,7 +146,7 @@
 
 @code {
     private readonly List<ActivoResponseDto> assets = new(); private List<CategoriaResponseDto> categories = new(); private ActivoRequestDto form = new() { FechaAdquisicion = DateTime.Today }; private ActivoResponseDto? editing;
-    private string search = "", categoryFilter = "", stateFilter = "", locationText = "", sort = nameof(ActivoResponseDto.Codigo), message = ""; private DateTime? from; private EstadoActivo editState; private int page = 1; private bool descending, showForm, isError;     
+    private string search = "", categoryFilter = "", stateFilter = "", locationText = "", sort = nameof(ActivoResponseDto.Codigo), message = ""; private DateTime? from; private EstadoActivo editState; private int page = 1; private bool descending, isError;     
     private bool showFilters = false;
     private Guid? openMenuId;
 
@@ -188,9 +181,9 @@
     private void ResetPage() => page = 1;
     private string CategoryName(Guid id) => categories.FirstOrDefault(x => x.Id == id)?.Nombre ?? "—";
     
-    private void OpenCreate() { editing = null; form = new() { FechaAdquisicion = DateTime.Today }; locationText = ""; showForm = true; }
-    private void OpenEdit(ActivoResponseDto asset) { editing = asset; form = new() { Codigo = asset.Codigo, Descripcion = asset.Descripcion, CategoriaId = asset.CategoriaId, UbicacionId = asset.UbicacionId, CostoInicial = asset.CostoInicial, FechaAdquisicion = asset.FechaAdquisicion, Proveedor = asset.Proveedor, NumeroSerie = asset.NumeroSerie }; locationText = asset.UbicacionId.ToString(); editState = asset.Estado; showForm = true; }
-    private async Task Save() { try { if (!Guid.TryParse(locationText, out var location)) throw new InvalidOperationException("Seleccione una ubicación válida."); form.UbicacionId = location; if (form.CategoriaId == Guid.Empty) throw new InvalidOperationException("Seleccione una categoría."); if (editing is null) await ActivoService.CrearActivoAsync(form); else await ActivoService.ActualizarActivoAsync(editing.Id, new ActivoUpdateDto { Descripcion = form.Descripcion, CategoriaId = form.CategoriaId, UbicacionId = location, CostoInicial = form.CostoInicial, FechaAdquisicion = form.FechaAdquisicion, Proveedor = form.Proveedor, NumeroSerie = form.NumeroSerie, Estado = editState }); showForm = false; isError = false; message = "Activo guardado correctamente."; await Load(); } catch (Exception ex) { isError = true; message = ex.Message; } }
+    private void OpenCreate() { editing = null; form = new() { FechaAdquisicion = DateTime.Today }; locationText = ""; }
+    private void OpenEdit(ActivoResponseDto asset) { editing = asset; form = new() { Codigo = asset.Codigo, Descripcion = asset.Descripcion, CategoriaId = asset.CategoriaId, UbicacionId = asset.UbicacionId, CostoInicial = asset.CostoInicial, FechaAdquisicion = asset.FechaAdquisicion, Proveedor = asset.Proveedor, NumeroSerie = asset.NumeroSerie }; locationText = asset.UbicacionId.ToString(); editState = asset.Estado; }
+    private async Task Save() { try { if (!Guid.TryParse(locationText, out var location)) throw new InvalidOperationException("Seleccione una ubicación válida."); form.UbicacionId = location; if (form.CategoriaId == Guid.Empty) throw new InvalidOperationException("Seleccione una categoría."); if (editing is null) await ActivoService.CrearActivoAsync(form); else await ActivoService.ActualizarActivoAsync(editing.Id, new ActivoUpdateDto { Descripcion = form.Descripcion, CategoriaId = form.CategoriaId, UbicacionId = location, CostoInicial = form.CostoInicial, FechaAdquisicion = form.FechaAdquisicion, Proveedor = form.Proveedor, NumeroSerie = form.NumeroSerie, Estado = editState }); isError = false; message = "Activo guardado correctamente."; await Load(); } catch (Exception ex) { isError = true; message = ex.Message; } }
     private async Task DeactivatePrompt(Guid id, string codigo) {
         var confirmed = await AlertService.ConfirmAsync(
             "Confirmar baja",

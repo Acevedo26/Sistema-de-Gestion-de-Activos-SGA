@@ -1,4 +1,4 @@
-﻿@page "/categorias"
+@page "/categorias"
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
@@ -32,16 +32,6 @@
             </span>
             <input type="text" placeholder="Buscar por nombre..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white" @bind="search" @bind:event="oninput" @bind:after="ResetPage" />
         </div>
-        
-        <!-- Botón Filtros (Not used for Categories, but keeping layout consistency) -->
-        <button class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 disabled:opacity-50" disabled>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filtros
-        </button>
-        
-        <!-- Descargar -->
-        <button @onclick='() => Navigation.NavigateTo("/reportes/inventario", true)' class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar
-        </button>
     </div>
 </div>
 
@@ -51,7 +41,6 @@
         <table class="w-full text-left text-sm">
             <thead class="border-b border-gray-200 bg-white text-gray-500 dark:border-gray-800 dark:bg-gray-900">
                 <tr>
-                    <th class="px-6 py-4 font-medium"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></th>
                     <th class="px-6 py-4 font-medium">Nombre</th>
                     <th class="px-6 py-4 font-medium">Vida Útil (años)</th>
                     <th class="px-6 py-4 font-medium text-right">Valor Residual</th>
@@ -64,7 +53,6 @@
                     @foreach (var c in Filtrados.Skip((page - 1) * 5).Take(5))
                     {
                         <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800" /></td>
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@c.Nombre</td>
                             <td class="px-6 py-4 text-gray-700 dark:text-gray-300">@c.VidaUtil</td>
                             <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">@c.ValorResidual.ToString("C")</td>
@@ -178,7 +166,6 @@
     private int nuevaVidaUtil;
     
     private bool EsAdmin = true;
-    private bool mostrarNueva;
     
     
     private CategoriaCreateDto nuevaCategoria = new();
@@ -243,7 +230,6 @@
     {
         await CategoriaService.CrearAsync(nuevaCategoria);
         nuevaCategoria = new();
-        mostrarNueva = false;
         await CargarCategorias();
     }
 

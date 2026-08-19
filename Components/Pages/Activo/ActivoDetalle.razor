@@ -1,0 +1,298 @@
+@page "/activos/detalle/{Id:guid}"
+@page "/activos/{Id:guid}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
+@using Sistema_de_Gestion_de_Activos.Application.Interfaces
+@using Sistema_de_Gestion_de_Activos.Domain.Enums
+@inject IActivoService ActivoService
+@inject ICategoriaService CategoriaService
+@inject IUbicacionService UbicacionService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Detalles del Activo - @(asset?.Codigo ?? "Cargando...")</PageTitle>
+
+@if (isLoading)
+{
+    <div class="flex items-center justify-center min-h-[400px]">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+    </div>
+}
+else if (asset == null)
+{
+    <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Activo no encontrado</h3>
+        <p class="mt-1 text-sm text-gray-500">El activo que intentas buscar no existe o ha sido eliminado.</p>
+        <div class="mt-6">
+            <button @onclick="GoBack" class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+                Volver al listado
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Header Controls -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <button @onclick="GoBack" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    Detalles del Activo
+                </h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">@asset.Codigo • @asset.Descripcion</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/activos/editar/@asset.Id" class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> Editar
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Card (General Info) -->
+    <div class="mb-8 rounded-xl border border-gray-200 bg-white p-6 md:p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column: Identificación -->
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Código</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex rounded bg-gray-100 px-2.5 py-1 font-mono text-sm font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">@asset.Codigo</span>
+                        <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Copiar código">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Descripción</h3>
+                    <p class="text-base text-gray-900 dark:text-white">@asset.Descripcion</p>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Categoría</h3>
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <span class="h-1.5 w-1.5 rounded-full @CategoryDotColor(asset.CategoriaId)"></span> @categoriaNombre
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Estado</h3>
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <span class="h-1.5 w-1.5 rounded-full @StateDotColor(asset.Estado)"></span> @asset.Estado
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Details -->
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Proveedor & Serie</h3>
+                    <p class="text-sm font-medium text-primary-600 dark:text-primary-400">@(asset.Proveedor ?? "No especificado")</p>
+                    <div class="mt-1 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>SN: @(asset.NumeroSerie ?? "N/A")</span>
+                        @if (!string.IsNullOrEmpty(asset.NumeroSerie)) {
+                            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Copiar serie">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Asignación Actual</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">@(asset.ResponsableNombre ?? "Sin responsable asignado")</span>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">@ubicacionNombre</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-800 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <a href="#" class="border-primary-500 text-primary-600 dark:text-primary-500 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Información Financiera</a>
+            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Mantenimiento</a>
+            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Historial</a>
+            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Análisis</a>
+        </nav>
+    </div>
+
+    <!-- Financial Information Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Financial Card -->
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Actual</h3>
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                </div>
+                <div class="mb-8">
+                    <span class="text-4xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</span>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Depreciación Consumida</span>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white">@Math.Round(asset.PorcentajeDepreciacion)%</span>
+                    </div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div class="h-full bg-primary-500 rounded-full" style="width: @Math.Round(asset.PorcentajeDepreciacion)%"></div>
+                    </div>
+                    <div class="mt-2 text-right">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">@FormatCurrency(asset.CostoInicial - asset.ValorActual) acumulado</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <div>
+                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Costo Original</h4>
+                    <p class="font-medium text-gray-900 dark:text-white">@FormatCurrency(asset.CostoInicial)</p>
+                </div>
+                <div>
+                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Fecha Adquisición</h4>
+                    <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.ToString("dd/MM/yyyy")</p>
+                </div>
+                <div>
+                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Vida Útil Asignada</h4>
+                    <p class="font-medium text-gray-900 dark:text-white">@vidaUtil años</p>
+                </div>
+                <div>
+                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Fin Vida Útil Estimada</h4>
+                    <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.AddYears(vidaUtil).ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Chart Widget -->
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col w-full">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</h5>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Evolución de Valor</p>
+                </div>
+                <div class="flex items-center px-2.5 py-0.5 text-sm font-medium text-red-600 dark:text-red-500 text-center">
+                    <svg class="w-4 h-4 mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0 0-4-4m4 4 4-4"/></svg>
+                    -@Math.Round(asset.PorcentajeDepreciacion)%
+                </div>
+            </div>
+            <div id="area-chart" class="w-full"></div>
+            
+            <div class="grid grid-cols-1 items-center border-t border-gray-100 dark:border-gray-800 justify-between mt-4">
+                <div class="flex justify-between items-center pt-4">
+                    <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown" data-dropdown-placement="bottom" class="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-center inline-flex items-center" type="button">
+                        Vida Útil (@vidaUtil años)
+                        <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                    </button>
+                    <a href="/activos" class="inline-flex items-center text-primary-600 bg-transparent border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 font-medium rounded-lg text-sm px-3 py-2">
+                        Ver Reporte
+                        <svg class="w-4 h-4 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    
+    private ActivoResponseDto? asset;
+    private bool isLoading = true;
+    private string categoriaNombre = "—";
+    private string ubicacionNombre = "—";
+    private int vidaUtil = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            asset = await ActivoService.ObtenerPorIdAsync(Id);
+            
+            if (asset != null)
+            {
+                var categorias = await CategoriaService.ObtenerTodasAsync();
+                var categoria = categorias.FirstOrDefault(c => c.Id == asset.CategoriaId);
+                if (categoria != null)
+                {
+                    categoriaNombre = categoria.Nombre;
+                    vidaUtil = categoria.VidaUtil;
+                }
+
+                var ubicaciones = await UbicacionService.ObtenerTodasAsync();
+                var ubicacion = ubicaciones.FirstOrDefault(u => u.Id == asset.UbicacionId);
+                if (ubicacion != null)
+                {
+                    ubicacionNombre = $"{ubicacion.Edificio} - {ubicacion.Departamento} - {ubicacion.Oficina}";
+                }
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool chartRendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isLoading && asset != null && !chartRendered)
+        {
+            chartRendered = true;
+            // Generar datos falsos de depreciación para el gráfico basado en el valor actual
+            var dataValues = new List<decimal> { asset.CostoInicial };
+            var diff = asset.CostoInicial - asset.ValorActual;
+            var step = diff / 6;
+            for (int i = 1; i <= 6; i++) { dataValues.Add(Math.Round(asset.CostoInicial - (step * i), 2)); }
+            
+            var labels = new List<string> { "0M", "1M", "2M", "3M", "4M", "5M", "Hoy" };
+            
+            await JS.InvokeVoidAsync("renderAssetChart", "area-chart", dataValues, labels);
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/activos");
+    }
+
+    private string FormatCurrency(decimal value)
+    {
+        return value.ToString("C2", new System.Globalization.CultureInfo("es-CR")).Replace("¢", "₡");
+    }
+
+    private string StateDotColor(EstadoActivo state) => state switch {
+        EstadoActivo.Activo => "bg-green-500",
+        EstadoActivo.Mantenimiento => "bg-amber-500",
+        EstadoActivo.Inactivo => "bg-gray-500",
+        EstadoActivo.Baja => "bg-red-500",
+        _ => "bg-primary-500"
+    };
+
+    private string[] dotColors = new[] { "bg-primary-500", "bg-amber-500", "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-rose-500" };
+    private string CategoryDotColor(Guid id) {
+        var index = Math.Abs(id.GetHashCode()) % dotColors.Length;
+        return dotColors[index];
+    }
+}
