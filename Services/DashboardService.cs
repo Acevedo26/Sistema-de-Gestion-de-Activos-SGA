@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -36,8 +36,12 @@ namespace Sistema_de_Gestion_de_Activos.Services
         {
             var kpi = new DashboardKpiDto();
             
-            // Todos los activos incluyendo sus categorias
-            var activos = await _context.Activos.Include(a => a.Categoria).Include(a => a.Depreciacion).ToListAsync();
+            // Todos los activos activos (excluyendo bajas)
+            var activos = await _context.Activos
+                .Where(a => a.Estado != EstadoActivo.Baja)
+                .Include(a => a.Categoria)
+                .Include(a => a.Depreciacion)
+                .ToListAsync();
             var inicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
 
             kpi.TotalActivos = activos.Count;
@@ -45,8 +49,18 @@ namespace Sistema_de_Gestion_de_Activos.Services
             kpi.ValorActualTotal = activos.Sum(a => (a.Depreciacion?.ValorActual ?? a.CostoInicial));
             kpi.DepreciacionAcumuladaTotal = activos.Sum(a => a.CostoInicial - (a.Depreciacion?.ValorActual ?? a.CostoInicial));
 
+            for (int i = 5; i >= 0; i--)
+            {
+                var mes = DateTime.Now.AddMonths(-i);
+                var finDeMes = new DateTime(mes.Year, mes.Month, DateTime.DaysInMonth(mes.Year, mes.Month));
+                var activosHastaMes = activos.Where(a => a.FechaAdquisicion <= finDeMes).ToList();
+                kpi.TendenciaActivos.Add(activosHastaMes.Count);
+                kpi.TendenciaValor.Add(activosHastaMes.Sum(a => a.CostoInicial));
+            }
+
             kpi.ActivosDepreciados = activos.Count(a =>
             {
+                if (a.Depreciacion != null && a.Depreciacion.PorcentajeConsumido >= 100) return true;
                 if ((a.Depreciacion?.ValorActual ?? a.CostoInicial) <= 0) return true;
                 if (a.Categoria != null)
                 {
@@ -56,12 +70,13 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 return false;
             });
 
-            var mantenimientos = await _mantRepo.GetAllAsync();
+            var mantenimientos = await _context.Mantenimientos.Include(m => m.Activo).ToListAsync();
             var hoy = DateTime.Now.Date;
             var en7Dias = hoy.AddDays(7);
 
             kpi.MantenimientosProximos = mantenimientos.Count(m =>
                 m.Estado != EstadoMantenimiento.Finalizado &&
+                (m.Activo == null || m.Activo.Estado != EstadoActivo.Baja) &&
                 m.FechaInicio.Date >= hoy && m.FechaInicio.Date <= en7Dias);
 
             return kpi;
@@ -71,7 +86,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
         {
             var mantenimientos = await _context.Mantenimientos
                 .Include(m => m.Activo)
-                .Where(m => m.Estado != EstadoMantenimiento.Finalizado)
+                .Where(m => m.Estado != EstadoMantenimiento.Finalizado && (m.Activo == null || m.Activo.Estado != EstadoActivo.Baja))
                 .OrderBy(m => m.FechaInicio)
                 .Take(5)
                 .ToListAsync();

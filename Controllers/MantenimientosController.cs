@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -66,6 +66,29 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
 			catch (KeyNotFoundException ex)
 			{
 				return NotFound(new { message = ex.Message });
+			}
+		}
+
+		// PUT api/mantenimientos/{id}
+		[HttpPut("{id}")]
+		[Authorize(Policy = "ModificarMantenimientosPolicy")]
+		public async Task<IActionResult> Actualizar(Guid id, [FromBody] MantenimientoCreateDto dto)
+		{
+			if (!ModelState.IsValid)
+				return BadRequest(ModelState);
+
+			try
+			{
+				var resultado = await _mantenimientoService.ActualizarAsync(id, dto);
+				return Ok(resultado);
+			}
+			catch (KeyNotFoundException ex)
+			{
+				return NotFound(new { message = ex.Message });
+			}
+			catch (InvalidOperationException ex)
+			{
+				return BadRequest(new { message = ex.Message });
 			}
 		}
 

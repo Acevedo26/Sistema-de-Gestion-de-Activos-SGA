@@ -1,4 +1,4 @@
-﻿@page "/activos"
+@page "/activos"
 @attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
@@ -70,8 +70,8 @@
                     <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.Descripcion))">Descripción @SortMark(nameof(ActivoResponseDto.Descripcion))</button></th>
                     <th class="px-6 py-4 font-medium">Categoría</th>
                     <th class="px-6 py-4 font-medium">Estado</th>
-                    <th class="px-6 py-4 font-medium text-right"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.CostoInicial))">Valor Actual @SortMark(nameof(ActivoResponseDto.CostoInicial))</button></th>
-                    <th class="px-6 py-4 font-medium">Depreciación</th>
+                    <th class="px-6 py-4 font-medium text-right"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.ValorActual))">Valor Actual @SortMark(nameof(ActivoResponseDto.ValorActual))</button></th>
+                    <th class="px-6 py-4 font-medium"><button class="hover:text-gray-700 dark:hover:text-gray-300" @onclick="() => SortBy(nameof(ActivoResponseDto.PorcentajeDepreciacion))">Depreciación @SortMark(nameof(ActivoResponseDto.PorcentajeDepreciacion))</button></th>
                     <th class="px-6 py-4 font-medium text-right"></th>
                 </tr>
             </thead>
@@ -91,17 +91,17 @@
                                 <span class="h-1.5 w-1.5 rounded-full @StateDotColor(asset.Estado)"></span> @asset.Estado
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">@asset.CostoInicial.ToString("C")</td>
+                        <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">@asset.ValorActual.ToString("C")</td>
                         <td class="px-6 py-4">
                             @{
-                                var depPercent = 20; // Mock until real depreciation is added to response
+                                var depPercent = asset.PorcentajeDepreciacion;
                                 var depColor = depPercent >= 100 ? "bg-red-500" : (depPercent > 40 ? "bg-amber-500" : "bg-primary-500");
                             }
                             <div class="flex items-center gap-2">
                                 <div class="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                                    <div class="h-full @depColor rounded-full" style="width: @depPercent%"></div>
+                                    <div class="h-full @depColor rounded-full" style="width: @Math.Round(depPercent)%"></div>
                                 </div>
-                                <span class="text-xs font-medium text-gray-500">@depPercent%</span>
+                                <span class="text-xs font-medium text-gray-500">@Math.Round(depPercent)%</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -182,7 +182,7 @@
     private IEnumerable<ActivoResponseDto> FilteredAssets => Sort(assets.Where(x => (string.IsNullOrWhiteSpace(search) || x.Codigo.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Descripcion.Contains(search, StringComparison.OrdinalIgnoreCase) || (x.NumeroSerie?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)) && (string.IsNullOrEmpty(categoryFilter) || x.CategoriaId.ToString() == categoryFilter) && (string.IsNullOrEmpty(stateFilter) || x.Estado.ToString() == stateFilter) && (!from.HasValue || x.FechaAdquisicion.Date >= from.Value.Date)));
     private IEnumerable<ActivoResponseDto> PagedAssets => FilteredAssets.Skip((page - 1) * 5).Take(5);
     private int TotalPages => Math.Max(1, (int)Math.Ceiling(FilteredAssets.Count() / 5d));
-    private IEnumerable<ActivoResponseDto> Sort(IEnumerable<ActivoResponseDto> query) => sort switch { nameof(ActivoResponseDto.Descripcion) => descending ? query.OrderByDescending(x => x.Descripcion) : query.OrderBy(x => x.Descripcion), nameof(ActivoResponseDto.CostoInicial) => descending ? query.OrderByDescending(x => x.CostoInicial) : query.OrderBy(x => x.CostoInicial), _ => descending ? query.OrderByDescending(x => x.Codigo) : query.OrderBy(x => x.Codigo) };
+    private IEnumerable<ActivoResponseDto> Sort(IEnumerable<ActivoResponseDto> query) => sort switch { nameof(ActivoResponseDto.Descripcion) => descending ? query.OrderByDescending(x => x.Descripcion) : query.OrderBy(x => x.Descripcion), nameof(ActivoResponseDto.ValorActual) => descending ? query.OrderByDescending(x => x.ValorActual) : query.OrderBy(x => x.ValorActual), nameof(ActivoResponseDto.PorcentajeDepreciacion) => descending ? query.OrderByDescending(x => x.PorcentajeDepreciacion) : query.OrderBy(x => x.PorcentajeDepreciacion), _ => descending ? query.OrderByDescending(x => x.Codigo) : query.OrderBy(x => x.Codigo) };
     private void SortBy(string column) { if (sort == column) descending = !descending; else { sort = column; descending = false; } ResetPage(); }
     private string SortMark(string column) => sort == column ? (descending ? "↓" : "↑") : "";
     private void ResetPage() => page = 1;

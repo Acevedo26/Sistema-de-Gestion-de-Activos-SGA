@@ -194,7 +194,7 @@
     private string EstadoDotColor(EstadoMantenimiento estado) => estado switch
     {
         EstadoMantenimiento.Finalizado => "bg-green-500",
-        EstadoMantenimiento.EnProgreso => "bg-amber-500",
+        EstadoMantenimiento.Progreso => "bg-amber-500",
         EstadoMantenimiento.Pendiente => "bg-blue-500",
         _ => "bg-gray-500"
     };

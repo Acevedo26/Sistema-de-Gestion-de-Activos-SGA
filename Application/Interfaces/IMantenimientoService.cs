@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento;
@@ -17,6 +17,9 @@ namespace Sistema_de_Gestion_de_Activos.Application.Interfaces
 
 		// RF-08: registro de mantenimiento (preventivo o correctivo)
 		Task<MantenimientoResponseDto> RegistrarAsync(MantenimientoCreateDto dto);
+
+		// Actualizar mantenimiento existente
+		Task<MantenimientoResponseDto> ActualizarAsync(Guid id, MantenimientoCreateDto dto);
 
 		// Marca un mantenimiento en curso como finalizado
 		Task<MantenimientoResponseDto> FinalizarAsync(Guid id, MantenimientoFinalizarDto dto);

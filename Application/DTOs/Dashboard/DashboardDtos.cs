@@ -11,6 +11,8 @@ namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Dashboard
         public decimal ValorActualTotal { get; set; }
         public decimal DepreciacionAcumuladaTotal { get; set; }
         public int MantenimientosProximos { get; set; }
+        public System.Collections.Generic.List<int> TendenciaActivos { get; set; } = new();
+        public System.Collections.Generic.List<decimal> TendenciaValor { get; set; } = new();
     }
 
     public class AlertaMantenimientoDto

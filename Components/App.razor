@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -58,6 +58,32 @@
             link.click();
             document.body.removeChild(link);
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.sgaAlerts = {
+            success: function(title, text) {
+                return Swal.fire({ title: title, text: text, icon: 'success' });
+            },
+            error: function(title, text) {
+                return Swal.fire({ title: title, text: text, icon: 'error' });
+            },
+            warning: function(title, text) {
+                return Swal.fire({ title: title, text: text, icon: 'warning' });
+            },
+            confirm: function(title, text, icon, confirmButtonText, cancelButtonText) {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon || 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: confirmButtonText || 'Confirmar',
+                    cancelButtonText: cancelButtonText || 'Cancelar'
+                }).then(function(result) {
+                    return result.isConfirmed;
+                });
+            }
+        };
     </script>
 </body>
 </html>

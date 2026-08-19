@@ -1,4 +1,4 @@
-﻿using Sistema_de_Gestion_de_Activos.Domain.Enums;
+using Sistema_de_Gestion_de_Activos.Domain.Enums;
 
 namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
 {
@@ -25,5 +25,9 @@ namespace Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
         public EstadoActivo Estado { get; set; }
         public Guid? ResponsableId { get; set; }
         public string? ResponsableNombre { get; set; }
+        
+        // Propiedades de depreciación
+        public decimal ValorActual { get; set; }
+        public decimal PorcentajeDepreciacion { get; set; }
     }
 }

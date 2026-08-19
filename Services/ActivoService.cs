@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos;
 using Sistema_de_Gestion_de_Activos.Application.Interfaces;
 using Sistema_de_Gestion_de_Activos.Data;
@@ -21,6 +21,8 @@ namespace Sistema_de_Gestion_de_Activos.Services
         public async Task<IEnumerable<ActivoResponseDto>> ObtenerTodosAsync()
         {
             return await _context.Activos
+                .Include(a => a.Depreciacion)
+                .Include(a => a.Responsable)
                 .Select(a => new ActivoResponseDto
                 {
                     Id = a.Id,
@@ -32,9 +34,11 @@ namespace Sistema_de_Gestion_de_Activos.Services
                     CostoInicial = a.CostoInicial,
                     Proveedor = a.Proveedor,
                     NumeroSerie = a.NumeroSerie,
-                    Estado = a.Estado
-                    ,ResponsableId = a.ResponsableId
-                    ,ResponsableNombre = a.Responsable != null ? a.Responsable.Nombre : null
+                    Estado = a.Estado,
+                    ResponsableId = a.ResponsableId,
+                    ResponsableNombre = a.Responsable != null ? a.Responsable.Nombre : null,
+                    ValorActual = a.Depreciacion != null ? a.Depreciacion.ValorActual : a.CostoInicial,
+                    PorcentajeDepreciacion = a.Depreciacion != null ? a.Depreciacion.PorcentajeConsumido : 0
                 })
                 .ToListAsync();
         }
@@ -82,8 +86,10 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 CostoInicial = activo.CostoInicial,
                 Proveedor = activo.Proveedor,
                 NumeroSerie = activo.NumeroSerie,
-                Estado = activo.Estado
-                ,ResponsableId = activo.ResponsableId
+                Estado = activo.Estado,
+                ResponsableId = activo.ResponsableId,
+                ValorActual = activo.CostoInicial, // Recién creado
+                PorcentajeDepreciacion = 0
             };
         }
 
@@ -135,19 +141,25 @@ namespace Sistema_de_Gestion_de_Activos.Services
             await _context.SaveChangesAsync();
             await _depreciacionService.RecalcularAsync(id);
 
+            var activoActualizado = await _context.Activos
+                .Include(a => a.Depreciacion)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
             return new ActivoResponseDto
             {
-                Id = activo.Id,
-                Codigo = activo.Codigo,
-                Descripcion = activo.Descripcion,
-                CategoriaId = activo.CategoriaId,
-                UbicacionId = activo.UbicacionId,
-                FechaAdquisicion = activo.FechaAdquisicion,
-                CostoInicial = activo.CostoInicial,
-                Proveedor = activo.Proveedor,
-                NumeroSerie = activo.NumeroSerie,
-                Estado = activo.Estado
-                ,ResponsableId = activo.ResponsableId
+                Id = activoActualizado!.Id,
+                Codigo = activoActualizado.Codigo,
+                Descripcion = activoActualizado.Descripcion,
+                CategoriaId = activoActualizado.CategoriaId,
+                UbicacionId = activoActualizado.UbicacionId,
+                FechaAdquisicion = activoActualizado.FechaAdquisicion,
+                CostoInicial = activoActualizado.CostoInicial,
+                Proveedor = activoActualizado.Proveedor,
+                NumeroSerie = activoActualizado.NumeroSerie,
+                Estado = activoActualizado.Estado,
+                ResponsableId = activoActualizado.ResponsableId,
+                ValorActual = activoActualizado.Depreciacion != null ? activoActualizado.Depreciacion.ValorActual : activoActualizado.CostoInicial,
+                PorcentajeDepreciacion = activoActualizado.Depreciacion != null ? activoActualizado.Depreciacion.PorcentajeConsumido : 0
             };
         }
 

@@ -181,7 +181,8 @@
         {
             if (Id.HasValue)
             {
-                await AlertService.ShowSuccessAsync("Guardado", "Mantenimiento actualizado (simulado).");
+                await MantenimientoService.ActualizarAsync(Id.Value, form);
+                await AlertService.ShowSuccessAsync("Guardado", "Mantenimiento actualizado correctamente.");
             }
             else
             {

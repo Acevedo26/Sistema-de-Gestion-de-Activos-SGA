@@ -22,8 +22,8 @@
 @if (Kpis == null)
 {
     <!-- Skeleton Loaders -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        @for(int i=0; i<4; i++) {
+    <div class="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+        @for(int i=0; i<3; i++) {
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700"></div>
@@ -38,7 +38,7 @@
 else
 {
     <!-- Tarjetas KPI -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
         
         <!-- Total de Activos -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/activos")'>
@@ -53,11 +53,7 @@ else
                         @(Kpis.ActivosNuevosMes > 0 ? $"+{Kpis.ActivosNuevosMes} activos este mes" : "Sin activos nuevos este mes")
                     </p>
                 </div>
-                <!-- Sparkline SVG Mock -->
-                <svg class="w-16 h-8 text-primary-500 opacity-60" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    <path d="M0 30 L10 20 L20 25 L30 15 L40 22 L50 10 L60 18 L70 5 L80 12 L90 2 L100 15 V30 H0 Z" fill="currentColor" fill-opacity="0.1"/>
-                    <path d="M0 30 L10 20 L20 25 L30 15 L40 22 L50 10 L60 18 L70 5 L80 12 L90 2 L100 15" fill="none" stroke="currentColor" stroke-width="2"/>
-                </svg>
+                <!-- Dynamic Sparkline --><svg class="w-16 h-8 text-primary-500 opacity-60" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="@GetSparklineFillInt(Kpis.TendenciaActivos)" fill="currentColor" fill-opacity="0.1"/><path d="@GetSparklinePathInt(Kpis.TendenciaActivos)" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </div>
         </div>
 
@@ -68,9 +64,16 @@ else
                 Estado de Depreciación
             </div>
             <div class="flex items-center gap-6">
-                <!-- CSS Donut Chart -->
-                <div class="relative w-16 h-16 rounded-full flex items-center justify-center shrink-0" style="background: conic-gradient(#ef4444 @(Kpis.PorcentajeDepreciados)%, #22c55e @(Kpis.PorcentajeDepreciados)% 100%);">
-                    <div class="absolute w-12 h-12 bg-white dark:bg-gray-800 rounded-full"></div>
+                                <!-- SVG Donut Chart -->
+                <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
+                    <svg viewBox="0 0 120 120" class="w-20 h-20 transform -rotate-90">
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" class="text-gray-200 dark:text-gray-700" />
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" class="text-primary-600 transition-all duration-1000 ease-out"
+                                stroke-dasharray="339.292" stroke-dashoffset="@(339.292 * (1 - (double.IsNaN(Kpis.PorcentajeDepreciados) || double.IsInfinity(Kpis.PorcentajeDepreciados) ? 0 : Kpis.PorcentajeDepreciados / 100.0)))" stroke-linecap="round" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span class="text-xs font-bold text-gray-900 dark:text-white">@(double.IsNaN(Kpis.PorcentajeDepreciados) || double.IsInfinity(Kpis.PorcentajeDepreciados) ? 0 : Math.Round(Kpis.PorcentajeDepreciados))%</span>
+                    </div>
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">@Kpis.ActivosDepreciados <span class="text-sm font-normal text-gray-500">activos</span></h2>
@@ -89,38 +92,20 @@ else
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">@Sistema_de_Gestion_de_Activos.Services.DashboardService.FormatearMoneda(Kpis.ValorActualTotal)</h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Depreciación acumulada: @Sistema_de_Gestion_de_Activos.Services.DashboardService.FormatearMoneda(Kpis.DepreciacionAcumuladaTotal)</p>
             </div>
-            <!-- Sparkline Fill SVG -->
-            <svg class="w-full h-8 text-primary-500 opacity-30 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <path d="M0 30 L20 28 L40 20 L60 15 L80 10 L100 5 V30 H0 Z" fill="currentColor" fill-opacity="0.3"/>
-            </svg>
+            <!-- Dynamic Sparkline Fill --><svg class="w-full h-8 text-primary-500 opacity-30 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="@GetSparklineFill(Kpis.TendenciaValor)" fill="currentColor" fill-opacity="0.3"/></svg>
         </div>
-
-        <!-- Próximos Mantenimientos -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow" @onclick='() => Navigation.NavigateTo("/mantenimientos")'>
-            <div class="flex items-center gap-3 mb-2 text-gray-500 dark:text-gray-400 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                Próximos Mantenimientos
             </div>
-            <div>
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white">@Kpis.MantenimientosProximos</h2>
-                <p class="text-sm mt-1 @(Kpis.MantenimientosProximos > 0 ? "text-yellow-500" : "text-green-500")">
-                    programados para los próximos 7 días.
-                </p>
-            </div>
-        </div>
-    </div>
 
     <!-- Layout Grid Inferior -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Alertas de Mantenimiento -->
-        <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 overflow-hidden">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 overflow-hidden">
             <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-red-50/50 dark:bg-red-900/10">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                     Alertas de Mantenimiento
                 </h3>
-                <a href="/mantenimientos" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">Ver todos</a>
             </div>
             
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -149,7 +134,7 @@ else
                                 <h4 class="text-sm font-semibold text-gray-900 dark:text-white">@alerta.NombreActivo</h4>
                                 <p class="text-xs mt-1 @colorUrge font-medium">@textUrge</p>
                             </div>
-                            <a href="/mantenimientos/editar/@alerta.ActivoId" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Ver</a>
+                            <a href="/mantenimientos" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Ver</a>
                         </div>
                     }
                 }
@@ -240,6 +225,28 @@ else
         Alertas = await DashboardService.GetAlertasMantenimientoAsync();
         Actividades = await DashboardService.GetActividadRecienteAsync();
     }
+
+        private string GetSparklinePath(List<decimal> values)
+    {
+        if (values == null || values.Count < 2) return "M0 30 L100 30";
+        var max = values.Max();
+        var min = values.Min();
+        if (max == min) return "M0 15 L100 15";
+        var width = 100.0m;
+        var height = 28.0m;
+        var stepX = width / (values.Count - 1);
+        var points = new List<string>();
+        for (int i = 0; i < values.Count; i++)
+        {
+            var x = i * stepX;
+            var y = 30.0m - (((values[i] - min) / (max - min)) * height);
+            points.Add($"{(i == 0 ? "M" : "L")}{x.ToString(System.Globalization.CultureInfo.InvariantCulture)} {y.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        }
+        return string.Join(" ", points);
+    }
+    private string GetSparklinePathInt(List<int> values) => GetSparklinePath(values?.Select(v => (decimal)v).ToList() ?? new());
+    private string GetSparklineFill(List<decimal> values) => $"{GetSparklinePath(values)} V30 H0 Z";
+    private string GetSparklineFillInt(List<int> values) => GetSparklineFill(values?.Select(v => (decimal)v).ToList() ?? new());
 
     public void Dispose()
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -81,7 +81,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
 				Costo = dto.Costo,
 				Descripcion = dto.Descripcion,
 				Observaciones = dto.Observaciones,
-				Estado = dto.FechaFin.HasValue ? EstadoMantenimiento.Finalizado : EstadoMantenimiento.EnProgreso
+				Estado = dto.FechaFin.HasValue ? EstadoMantenimiento.Finalizado : EstadoMantenimiento.Progreso
 			};
 
 			await _context.Mantenimientos.AddAsync(mantenimiento);
@@ -97,6 +97,34 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
 			mantenimiento.Activo = activo;
 			mantenimiento.Tecnico = tecnico;
+			return MapearADto(mantenimiento);
+		}
+
+		public async Task<MantenimientoResponseDto> ActualizarAsync(Guid id, MantenimientoCreateDto dto)
+		{
+			var mantenimiento = await _context.Mantenimientos.Include(m => m.Activo).Include(m => m.Tecnico).FirstOrDefaultAsync(m => m.Id == id);
+			if (mantenimiento == null) throw new KeyNotFoundException("Mantenimiento no encontrado.");
+
+			var activo = await _context.Activos.FindAsync(dto.ActivoId);
+			if (activo == null) throw new KeyNotFoundException("Activo no encontrado.");
+
+			if (dto.FechaFin.HasValue && dto.FechaFin.Value < dto.FechaInicio)
+				throw new InvalidOperationException("La fecha de finalización no puede ser anterior a la fecha de inicio.");
+
+			var tecnico = await _context.Usuarios.Include(u => u.Rol).FirstOrDefaultAsync(u => u.Id == dto.TecnicoId);
+			if (tecnico == null) throw new KeyNotFoundException("Técnico no encontrado.");
+
+			mantenimiento.ActivoId = dto.ActivoId;
+			mantenimiento.TecnicoId = dto.TecnicoId;
+			mantenimiento.Tipo = dto.Tipo;
+			mantenimiento.FechaInicio = dto.FechaInicio;
+			mantenimiento.FechaFin = dto.FechaFin;
+			mantenimiento.Costo = dto.Costo;
+			mantenimiento.Descripcion = dto.Descripcion;
+			mantenimiento.Observaciones = dto.Observaciones;
+			mantenimiento.Estado = dto.FechaFin.HasValue ? EstadoMantenimiento.Finalizado : EstadoMantenimiento.Progreso;
+
+			await _context.SaveChangesAsync();
 			return MapearADto(mantenimiento);
 		}
 
