@@ -72,6 +72,7 @@ builder.Services.AddTransient<IReporteMantenimientoAnalisisService, ReporteMante
 // Servicios del Módulo 6 — Depreciación
 builder.Services.AddTransient<ICategoriaService, CategoriaService>();
 builder.Services.AddTransient<IUbicacionService, UbicacionService>();
+builder.Services.AddTransient<IDashboardService, DashboardService>();
 builder.Services.AddTransient<IDepreciacionService, DepreciacionService>();
 builder.Services.AddTransient<IHistorialDepreciacionService, HistorialDepreciacionService>();
 builder.Services.AddTransient<IReporteDepreciacionService, ReporteDepreciacionService>();
