@@ -1,11 +1,11 @@
-ï»¿@page "/login"
-@layout Layout.EmptyLayout
+@page "/login"
+@layout EmptyLayout
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAuthService AuthService
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
 
 @code {
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
@@ -16,6 +16,7 @@
             }
         }
     }
+
     private bool showPassword = false;
     private bool isLoading = false;
     private string email = string.Empty;
@@ -30,13 +31,13 @@
 
         if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
         {
-            error = "Por favor ingrese un correo vÃ¡lido.";
+            error = "Por favor ingrese un correo válido.";
             return;
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            error = "La contraseÃ±a es requerida.";
+            error = "La contraseña es requerida.";
             return;
         }
 
@@ -53,7 +54,7 @@
             }
             else
             {
-                error = "Correo o contraseÃ±a incorrectos, o la cuenta estÃ¡ inactiva.";
+                error = "Correo o contraseña incorrectos, o la cuenta está inactiva.";
             }
         }
         catch (Exception ex)
@@ -69,41 +70,29 @@
 
 <div class="flex min-h-screen w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-950">
     <Card class="w-full max-w-[400px]">
-        <CardHeader class="flex flex-col items-center space-y-4 pb-6 pt-8">
-            <div class="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-600 text-white shadow-sm">
-                <!-- Icono Building2 -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10 22v-9.5a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5V22" />
-                    <path d="M4 22h16" />
-                    <path d="M14 22v-5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5V22" />
-                    <path d="M6 12h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2Z" />
-                    <path d="M6 8h2" />
-                    <path d="M16 8h2" />
-                    <path d="M6 12h2" />
-                    <path d="M16 12h2" />
-                </svg>
+        <CardHeader class="flex flex-col items-center space-y-4 pb-3 pt-4">
+            <div class="flex h-100 w-200 items-center justify-center rounded-xl bg-transparent shadow-sm overflow-hidden">
+                <img src="/images/SGA.svg" alt="SGA Logo" class="w-full h-full object-cover" />
             </div>
             <div class="text-center">
                 <h1 class="text-lg font-semibold text-gray-900 dark:text-white focus:outline-none">
-                    Acceso al Sistema de GestiÃ³n de Activos
+                    Acceso al Sistema de Gestión de Activos
                 </h1>
             </div>
         </CardHeader>
 
         <CardContent>
             <EditForm Model="@this" OnSubmit="HandleLogin" class="space-y-4">
-                <Input Label="Correo ElectrÃ³nico"
+                <Input Label="Correo Electrónico"
                        Type="email"
                        placeholder="correo@empresa.com"
                        @bind-Value="email"
-                       Error="@(error != string.Empty && string.IsNullOrWhiteSpace(email) ? "Requerido" : null)"
-                       />
-
+                       Error="@(error != string.Empty && string.IsNullOrWhiteSpace(email) ? "Requerido" : null)" />
 
                 <div class="relative">
-                    <Input Label="ContraseÃ±a"
+                    <Input Label="Contraseña"
                            Type="@PasswordType"
-                           placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                           placeholder="••••••••"
                            @bind-Value="password"
                            Error="@(error != string.Empty && string.IsNullOrWhiteSpace(password) ? "Requerido" : null)" />
 
@@ -141,21 +130,21 @@
                 <Button Type="submit"
                         Class="w-full mt-2 h-11"
                         IsLoading="isLoading">
-                    Iniciar SesiÃ³n
+                    Iniciar Sesión
                 </Button>
             </EditForm>
 
             <div class="mt-4 text-center">
                 <a href="/recuperar-password"
                    class="text-sm text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400">
-                    Â¿OlvidÃ³ su contraseÃ±a?
+                    ¿Olvidó su contraseña?
                 </a>
             </div>
         </CardContent>
 
         <CardFooter class="justify-center border-t border-gray-100 pb-6 pt-6 dark:border-gray-800">
             <p class="text-xs text-gray-500 dark:text-gray-400">
-                Protegido por polÃ­ticas de seguridad corporativa.
+                Protegido por políticas de seguridad corporativa.
             </p>
         </CardFooter>
     </Card>

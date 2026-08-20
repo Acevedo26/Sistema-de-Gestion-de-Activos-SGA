@@ -507,26 +507,21 @@ namespace Sistema_de_Gestion_de_Activos.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("FechaExpiracion")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("fecha_expiracion");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("token");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("Usado")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("usuario_id");
-
-                    b.Property<bool>("Utilizado")
-                        .HasColumnType("bit")
-                        .HasColumnName("utilizado");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -535,7 +530,7 @@ namespace Sistema_de_Gestion_de_Activos.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("tokens_recuperacion");
+                    b.ToTable("TokensRecuperacion");
                 });
 
             modelBuilder.Entity("Sistema_de_Gestion_de_Activos.Domain.Entities.Ubicacion", b =>

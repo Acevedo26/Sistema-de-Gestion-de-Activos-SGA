@@ -1,4 +1,4 @@
-﻿@page "/activos/nuevo"
+@page "/activos/nuevo"
 @page "/activos/editar/{Id:guid}"
 @attribute [Authorize(Roles = "Administrador,Gestor")]
 @inject NavigationManager Navigation
@@ -6,11 +6,11 @@
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.ICategoriaService CategoriaService
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
-@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
-@using Microsoft.EntityFrameworkCore
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUbicacionService UbicacionService
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Depreciacion
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Maestros
 
 <PageTitle>@(Id == null ? "Nuevo Activo" : "Editar Activo")</PageTitle>
 
@@ -153,14 +153,14 @@
     private string error = string.Empty;
 
     private List<CategoriaResponseDto> categories = new();
-    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Ubicacion> ubicaciones = new();
+    private List<UbicacionDto> ubicaciones = new();
     private List<UsuarioResponseDto> responsables = new();
 
     protected override async Task OnInitializedAsync()
     {
         categories = (await CategoriaService.ObtenerTodasAsync()).ToList();
         responsables = (await UsuarioService.ObtenerTodosAsync()).ToList();
-        ubicaciones = await DbContext.Ubicaciones.ToListAsync();
+        ubicaciones = (await UbicacionService.ObtenerTodasAsync()).ToList();
 
         if (Id.HasValue)
         {

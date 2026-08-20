@@ -39,10 +39,10 @@ namespace Sistema_de_Gestion_de_Activos.Services
             }
 
             // Invalida tokens previos no usados
-            var tokensActivos = await _tokenRepository.FindAsync(t => t.UsuarioId == usuario.Id && !t.Utilizado && t.FechaExpiracion > DateTime.UtcNow);
+            var tokensActivos = await _tokenRepository.FindAsync(t => t.UsuarioId == usuario.Id && !t.Usado && t.FechaExpiracion > DateTime.UtcNow);
             foreach (var t in tokensActivos)
             {
-                t.Utilizado = true;
+                t.Usado = true;
                 _tokenRepository.Update(t);
             }
 
@@ -55,7 +55,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
                 UsuarioId = usuario.Id,
                 Token = rawToken,
                 FechaExpiracion = DateTime.UtcNow.AddMinutes(30), // Expira en 30 minutos
-                Utilizado = false
+                Usado = false
             };
 
             await _tokenRepository.AddAsync(tokenEntity);
@@ -69,7 +69,7 @@ namespace Sistema_de_Gestion_de_Activos.Services
 
         public async Task<bool> RestablecerContrasenaAsync(string token, string nuevaContrasena)
         {
-            var tokenEntities = await _tokenRepository.FindAsync(t => t.Token == token && !t.Utilizado);
+            var tokenEntities = await _tokenRepository.FindAsync(t => t.Token == token && !t.Usado);
             var tokenEntity = tokenEntities.FirstOrDefault();
 
             if (tokenEntity == null || tokenEntity.FechaExpiracion < DateTime.UtcNow)
@@ -88,8 +88,8 @@ namespace Sistema_de_Gestion_de_Activos.Services
             usuario.PasswordHash = hashedPassword;
             _usuarioRepository.Update(usuario);
 
-            // Marcar token como utilizado
-            tokenEntity.Utilizado = true;
+            // Marcar token como Usado
+            tokenEntity.Usado = true;
             _tokenRepository.Update(tokenEntity);
 
             await _usuarioRepository.SaveChangesAsync(); 

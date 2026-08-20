@@ -37,4 +37,8 @@
     <Folder Include="Repositories\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\..\Downloads\SGA.svg" Link="wwwroot\images\SGA.svg" />
+  </ItemGroup>
+
 </Project>

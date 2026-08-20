@@ -7,19 +7,23 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Sistema_de_Gestion_de_Activos.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous] // RF-19: Disponible sin autenticación
+    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IRecuperacionService _recuperacionService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IRecuperacionService recuperacionService)
         {
             _authService = authService;
+            _recuperacionService = recuperacionService;
         }
 
         [HttpPost("login")]
@@ -54,12 +58,12 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
             });
         }
 
-        [HttpPost("olvide-password")]
-        public async Task<IActionResult> OlvidePassword([FromBody] SolicitarRecuperacionDto dto)
+        [HttpPost("solicitar-recuperacion")]
+        public async Task<IActionResult> SolicitarRecuperacion([FromBody] SolicitarRecuperacionDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            // Siempre responde 200 OK genérico para no revelar si el correo existe
-            await _authService.SolicitarRecuperacionAsync(dto.Correo);
+            
+            await _recuperacionService.SolicitarRecuperacionAsync(dto.Correo);
             
             return Ok(new { mensaje = "Si el correo existe en nuestro sistema, recibirá un enlace para restablecer su contraseña en breve." });
         }
@@ -68,14 +72,16 @@ namespace Sistema_de_Gestion_de_Activos.Controllers
         public async Task<IActionResult> RestablecerPassword([FromBody] RestablecerPasswordDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            var exito = await _authService.RestablecerContrasenaAsync(dto.Token, dto.NuevaContrasena);
-
-            if (!exito)
+            
+            try
             {
-                return BadRequest(new { mensaje = "El token es inválido o ha expirado." });
+                await _recuperacionService.RestablecerPasswordAsync(dto.Token, dto.NuevaContrasena);
+                return Ok(new { mensaje = "Su contraseña ha sido restablecida exitosamente." });
             }
-
-            return Ok(new { mensaje = "Su contraseña ha sido restablecida exitosamente." });
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
         }
     }
 }

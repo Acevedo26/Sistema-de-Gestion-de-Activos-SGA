@@ -1,11 +1,13 @@
-﻿<CascadingAuthenticationState>
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout._Layout)">
                 <NotAuthorized>
                     @if (context.User.Identity?.IsAuthenticated == true)
                     {
-                        <div class="p-6 text-center text-red-500 font-bold">No tienes permiso para ver esta página.</div>
+                        <LayoutView Layout="@typeof(Layout.EmptyLayout)">
+                            <Sistema_de_Gestion_de_Activos.Components.Pages.Error401 />
+                        </LayoutView>
                     }
                     else
                     {

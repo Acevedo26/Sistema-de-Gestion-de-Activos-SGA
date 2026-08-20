@@ -1,11 +1,9 @@
-﻿@page "/historial-depreciacion"
+@page "/historial-depreciacion"
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
 @attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
-@using Microsoft.EntityFrameworkCore
 @inject IHistorialDepreciacionService HistorialService
-@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
-
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
 <PageTitle>Consulta de Depreciación Histórica</PageTitle>
 
 <div class="mb-6">
@@ -91,8 +89,8 @@ else if (resultado != null)
         cargando = true;
         resultado = null;
         
-        var activo = await DbContext.Activos
-            .FirstOrDefaultAsync(a => a.Codigo == codigoBusqueda || a.Descripcion == codigoBusqueda);
+        var activos = await ActivoService.ObtenerTodosAsync();
+        var activo = activos.FirstOrDefault(a => a.Codigo == codigoBusqueda || a.Descripcion == codigoBusqueda);
 
         if (activo != null)
         {

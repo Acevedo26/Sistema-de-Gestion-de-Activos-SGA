@@ -1,5 +1,5 @@
 @page "/ubicaciones"
-@using Sistema_de_Gestion_de_Activos.Domain.Entities
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Maestros
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @attribute [Authorize(Roles = "Administrador,Gestor")]
 @inject IUbicacionService UbicacionService
@@ -39,7 +39,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Oficina</label>
-                        <InputText @bind-Value="form.Oficina" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" />
+                        <InputText @bind-Value="form.Nombre" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors" />
                     </div>
 
                     <div class="flex gap-2 pt-2">
@@ -90,7 +90,7 @@
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
                                         <td class="px-6 py-4 text-gray-900 dark:text-gray-100 font-medium">@ub.Edificio</td>
                                         <td class="px-6 py-4 text-gray-600 dark:text-gray-300">@ub.Departamento</td>
-                                        <td class="px-6 py-4 text-gray-600 dark:text-gray-300">@ub.Oficina</td>
+                                        <td class="px-6 py-4 text-gray-600 dark:text-gray-300">@ub.Nombre</td>
                                         <td class="px-6 py-4 text-right">
                                             <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button type="button" @onclick="() => Edit(ub)" class="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-600 dark:hover:border-primary-400 transition-colors" title="Editar">
@@ -113,8 +113,8 @@
 </div>
 
 @code {
-    private List<Ubicacion> ubicaciones = new();
-    private Ubicacion form = new();
+    private List<UbicacionDto> ubicaciones = new();
+    private UbicacionDto form = new();
     private Guid? editingId;
     private bool isSubmitting;
 
@@ -128,22 +128,22 @@
         ubicaciones = (await UbicacionService.ObtenerTodasAsync()).ToList();
     }
 
-    private void Edit(Ubicacion ub)
+    private void Edit(UbicacionDto ub)
     {
         editingId = ub.Id;
-        form = new Ubicacion
+        form = new UbicacionDto
         {
             Id = ub.Id,
             Edificio = ub.Edificio,
-            Departamento = ub.Departamento,
-            Oficina = ub.Oficina
+            Departamento = ub.Departamento ?? string.Empty,
+            Nombre = ub.Nombre ?? string.Empty
         };
     }
 
     private void CancelEdit()
     {
         editingId = null;
-        form = new Ubicacion();
+        form = new UbicacionDto();
     }
 
     private async Task Save()
@@ -157,14 +157,22 @@
         isSubmitting = true;
         try
         {
+            var entidad = new Sistema_de_Gestion_de_Activos.Domain.Entities.Ubicacion
+            {
+                Id = form.Id,
+                Edificio = form.Edificio,
+                Departamento = form.Departamento,
+                Oficina = form.Nombre
+            };
+
             if (editingId.HasValue)
             {
-                await UbicacionService.ActualizarAsync(editingId.Value, form);
+                await UbicacionService.ActualizarAsync(editingId.Value, entidad);
                 await AlertService.ShowSuccessAsync("Éxito", "Ubicación actualizada.");
             }
             else
             {
-                await UbicacionService.CrearAsync(form);
+                await UbicacionService.CrearAsync(entidad);
                 await AlertService.ShowSuccessAsync("Éxito", "Ubicación creada.");
             }
 
@@ -181,7 +189,7 @@
         }
     }
 
-    private async Task Delete(Ubicacion ub)
+    private async Task Delete(UbicacionDto ub)
     {
         var confirm = await AlertService.ConfirmAsync("Eliminar Ubicación", $"¿Desea eliminar la ubicación en {ub.Edificio}?");
         if (confirm)

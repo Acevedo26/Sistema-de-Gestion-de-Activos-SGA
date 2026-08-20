@@ -2,11 +2,11 @@
 @using Sistema_de_Gestion_de_Activos.Application.ViewModels
 @attribute [Authorize]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
-@using Microsoft.EntityFrameworkCore
 @inject IDepreciacionService DepreciacionService
 @inject IHistorialDepreciacionService HistorialService
 @inject IAnalisisIntegradoService AnalisisService
-@inject Sistema_de_Gestion_de_Activos.Data.SgaDbContext DbContext
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.ICategoriaService CategoriaService
 
 <PageTitle>Depreciación del Activo</PageTitle>
 
@@ -200,11 +200,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var activo = await DbContext.Activos
-            .Include(a => a.Categoria)
-            .FirstOrDefaultAsync(a => a.Id == Id);
+        var activos = await ActivoService.ObtenerTodosAsync();
+        var activo = activos.FirstOrDefault(a => a.Id == Id);
 
         if (activo == null) return;
+        
+        var categorias = await CategoriaService.ObtenerTodasAsync();
+        var categoria = categorias.FirstOrDefault(c => c.Id == activo.CategoriaId);
+        var categoriaNombre = categoria?.Nombre ?? "Sin categoría";
 
         var detalleFinanciero = await DepreciacionService.ObtenerDetalleFinancieroAsync(Id);
         var historial = await HistorialService.ObtenerHistorialPorActivoAsync(Id);
@@ -216,7 +219,7 @@
             Id = Id,
             Codigo = activo.Codigo,
             Descripcion = activo.Descripcion,
-            Categoria = activo.Categoria.Nombre,
+            Categoria = categoriaNombre,
             FechaAdquisicion = activo.FechaAdquisicion,
             CostoInicial = activo.CostoInicial,
             Depreciacion = new DepreciacionDetalleViewModel

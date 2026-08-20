@@ -1,6 +1,5 @@
-@using Microsoft.EntityFrameworkCore
-@using Sistema_de_Gestion_de_Activos.Data
-@inject SgaDbContext DbContext
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Maestros
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.INotificationService NotificationService
 
 <div class="relative">
     <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative focus-visible:outline-none" @onclick="Toggle" aria-label="Notificaciones" title="Notificaciones">
@@ -30,10 +29,10 @@
 @code {
     private bool open;
     private int unread;
-    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Notificacion> items = new();
+    private List<NotificacionDto> items = new();
     protected override async Task OnInitializedAsync() => await Load();
-    private async Task Load() { items = await DbContext.Notificaciones.OrderBy(n => n.Leida).ThenByDescending(n => n.FechaGeneracion).Take(10).ToListAsync(); unread = items.Count(x => !x.Leida); }
+    private async Task Load() { items = (await NotificationService.ObtenerRecientesAsync()).ToList(); unread = items.Count(x => !x.Leida); }
     private async Task Toggle() { open = !open; if (open) await Load(); }
-    private async Task MarkRead(Guid id) { var item = items.First(x => x.Id == id); item.Leida = true; await DbContext.SaveChangesAsync(); await Load(); }
-    private async Task MarkAll() { foreach (var item in items.Where(x => !x.Leida)) item.Leida = true; await DbContext.SaveChangesAsync(); await Load(); }
+    private async Task MarkRead(Guid id) { await NotificationService.MarcarComoLeidaAsync(id); await Load(); }
+    private async Task MarkAll() { await NotificationService.MarcarTodasComoLeidasAsync(); await Load(); }
 }

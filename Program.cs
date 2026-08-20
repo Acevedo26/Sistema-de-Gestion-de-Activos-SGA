@@ -1,4 +1,4 @@
-ï»¿using System.Globalization;
+using System.Globalization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -31,7 +31,7 @@ builder.Services.AddCors(options => options.AddPolicy("SgaClient", policy =>
     if (origins.Length > 0) policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
 }));
 
-// 1. Inyectar HttpContextAccessor y el Interceptor de AuditorÃ­a
+// 1. Inyectar HttpContextAccessor y el Interceptor de Auditoría
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<Sistema_de_Gestion_de_Activos.Data.Interceptors.AuditoriaInterceptor>();
 
@@ -42,34 +42,34 @@ builder.Services.AddDbContext<SgaDbContext>((sp, options) =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))           .AddInterceptors(interceptor);
 }, ServiceLifetime.Transient);
 
-// 3. InyecciÃ³n de Dependencias (Repositorios y Servicios)
-// Repositorio genÃ©rico 
+// 3. Inyección de Dependencias (Repositorios y Servicios)
+// Repositorio genérico 
 builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-// Repositorio y Servicio especÃ­ficos de Usuario
+// Repositorio y Servicio específicos de Usuario
 builder.Services.AddTransient<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddTransient<IUsuarioService, UsuarioService>();
 
-// MÃ³dulo 1 - GestiÃ³n de Activos
+// Módulo 1 - Gestión de Activos
 builder.Services.AddTransient<IActivoService, ActivoService>();
 
-// MÃ³dulo 2 - Movimientos
+// Módulo 2 - Movimientos
 builder.Services.AddTransient<IMovimientoService, MovimientoService>();
 
-// Servicios de AutenticaciÃ³n, Correo y AuditorÃ­a
+// Servicios de Autenticación, Correo y Auditoría
 builder.Services.AddTransient<IEmailService, SmtpEmailService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IAuditoriaService, AuditoriaService>();
 
-// Servicios del MÃ³dulo 3 â€” Mantenimiento
+// Servicios del Módulo 3 — Mantenimiento
 builder.Services.AddTransient<IMantenimientoService, MantenimientoService>();
 builder.Services.AddScoped<Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService, Sistema_de_Gestion_de_Activos.Services.AlertService>();
 builder.Services.AddTransient<IProgramaMantenimientoService, ProgramaMantenimientoService>();
 
-// Servicios del MÃ³dulo 4 â€” Reportes y AnÃ¡lisis
+// Servicios del Módulo 4 — Reportes y Análisis
 builder.Services.AddTransient<IReporteInventarioService, ReporteInventarioService>();
 builder.Services.AddTransient<IReporteMantenimientoAnalisisService, ReporteMantenimientoAnalisisService>();
 
-// Servicios del MÃ³dulo 6 â€” DepreciaciÃ³n
+// Servicios del Módulo 6 — Depreciación
 builder.Services.AddTransient<ICategoriaService, CategoriaService>();
 builder.Services.AddTransient<IUbicacionService, UbicacionService>();
 builder.Services.AddTransient<IDashboardService, DashboardService>();
@@ -88,10 +88,10 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "SGA API", Version = "v1" });
 
-    // DefiniciÃ³n de seguridad JWT para Swagger
+    // Definición de seguridad JWT para Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "AutenticaciÃ³n JWT usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
+        Description = "Autenticación JWT usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -114,7 +114,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 4. Configurar AutenticaciÃ³n JWT
+// 4. Configurar Autenticación JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
 if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
@@ -160,30 +160,33 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider, Sistema_de_Gestion_de_Activos.Providers.CustomAuthStateProvider>();
 
-// 4.1 Configurar PolÃ­ticas de AutorizaciÃ³n basadas en Roles (RF-17)
+// 4.1 Configurar Políticas de Autorización basadas en Roles (RF-17)
 builder.Services.AddAuthorization(options =>
 {
-    // PolÃ­tica: CreaciÃ³n/EdiciÃ³n/Baja de activos (Gestor y Admin)
+    // Política: Creación/Edición/Baja de activos (Gestor y Admin)
     options.AddPolicy("ModificarActivosPolicy", policy => 
         policy.RequireRole(nameof(NombreRol.Administrador), nameof(NombreRol.Gestor)));
 
-    // PolÃ­tica: GestiÃ³n de mantenimientos (TÃ©cnico, Gestor, Admin)
+    // Política: Gestión de mantenimientos (Técnico, Gestor, Admin)
     options.AddPolicy("ModificarMantenimientosPolicy", policy => 
         policy.RequireRole(nameof(NombreRol.Administrador), nameof(NombreRol.Gestor), nameof(NombreRol.Tecnico)));
 
-    // PolÃ­tica: Solo lectura general (Todos los roles)
+    // Política: Solo lectura general (Todos los roles)
     options.AddPolicy("SoloLecturaPolicy", policy => 
         policy.RequireRole(nameof(NombreRol.Administrador), nameof(NombreRol.Gestor), nameof(NombreRol.Tecnico), nameof(NombreRol.Visualizador)));
 });
 
-// Background Jobs â€” MÃ³dulo 6
+// Background Jobs — Módulo 6
 builder.Services.AddHostedService<DepreciacionDailyJob>();
 builder.Services.AddHostedService<SnapshotMensualJob>();
 builder.Services.AddHostedService<MantenimientoDailyJob>();
 
+builder.Services.AddTransient<IRecuperacionService, RecuperacionService>();
+builder.Services.AddTransient<INotificationService, NotificationService>();
+
 var app = builder.Build();
 
-// 5. MigraciÃ³n de la Base de Datos al iniciar
+// 5. Migración de la Base de Datos al iniciar
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<SgaDbContext>();
@@ -204,12 +207,13 @@ using (var scope = app.Services.CreateScope())
 app.UseExceptionHandler("/error");
 app.UseHsts();
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("SgaClient");
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGA API v1"));
 
 var cultureInfo = (CultureInfo)new CultureInfo("es-CR").Clone();
-cultureInfo.NumberFormat.CurrencySymbol = "â‚¡";
+cultureInfo.NumberFormat.CurrencySymbol = "¢";
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
@@ -225,10 +229,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-app.MapGet("/error", () => Results.Problem("OcurriÃ³ un error inesperado.")).AllowAnonymous();
+app.MapGet("/error", () => Results.Problem("Ocurrió un error inesperado.")).AllowAnonymous();
 
 app.MapControllers();
 app.MapRazorComponents<Sistema_de_Gestion_de_Activos.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+

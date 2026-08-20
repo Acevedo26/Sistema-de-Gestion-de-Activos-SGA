@@ -1,11 +1,12 @@
-﻿@page "/mantenimiento/programas/crear"
+@page "/mantenimiento/programas/crear"
 @using Sistema_de_Gestion_de_Activos.Application.DTOs.Mantenimiento
 @attribute [Authorize(Roles = "Administrador,Gestor,Tecnico")]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
-@using Sistema_de_Gestion_de_Activos.Data
-@using Microsoft.EntityFrameworkCore
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios
 @inject IProgramaMantenimientoService ProgramaService
-@inject SgaDbContext DbContext
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
 @inject NavigationManager Navigation
 
 <PageTitle>Nuevo Programa de Mantenimiento</PageTitle>
@@ -93,8 +94,8 @@
 </div>
 
 @code {
-    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Activo>? activos;
-    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Usuario>? usuarios;
+    private List<ActivoResponseDto>? activos;
+    private List<UsuarioResponseDto>? usuarios;
     private ProgramaMantenimientoCreateDto modelo = new() { FrecuenciaDias = 30 };
     private DateTime proximaFecha = DateTime.Today.AddDays(30);
     private string tecnicoAsignadoTexto = string.Empty;
@@ -102,8 +103,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        activos = await DbContext.Activos.OrderBy(a => a.Codigo).ToListAsync();
-        usuarios = await DbContext.Usuarios.OrderBy(u => u.Nombre).ToListAsync();
+        activos = (await ActivoService.ObtenerTodosAsync()).OrderBy(a => a.Codigo).ToList();
+        usuarios = (await UsuarioService.ObtenerTodosAsync()).OrderBy(u => u.Nombre).ToList();
     }
 
     private async Task Guardar()

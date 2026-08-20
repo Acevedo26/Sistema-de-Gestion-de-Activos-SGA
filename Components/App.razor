@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Gestión de Activos</title>
+    <link rel="icon" type="image/svg" href="images/Vector.svg" />
+    <title>SGA Corp</title>
     <base href="/" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -327,6 +328,18 @@
                     return result.isConfirmed;
                 });
             }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.13.0/lottie.min.js"></script>
+    <script>
+        window.loadLottieAnimation = (containerId, animationUrl) => {
+            lottie.loadAnimation({
+                container: document.getElementById(containerId),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: animationUrl
+            });
         };
     </script>
 </body>

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Sistema_de_Gestion_de_Activos.Application.Interfaces;
 using Sistema_de_Gestion_de_Activos.Domain.Entities;
 using Sistema_de_Gestion_de_Activos.Repositories.Interfaces;
 using System.Linq;
+using Sistema_de_Gestion_de_Activos.Application.DTOs.Maestros;
 
 namespace Sistema_de_Gestion_de_Activos.Services
 {
@@ -17,10 +18,17 @@ namespace Sistema_de_Gestion_de_Activos.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<Ubicacion>> ObtenerTodasAsync()
+        public async Task<List<UbicacionDto>> ObtenerTodasAsync()
         {
             var data = await _repository.GetAllAsync();
-            return data.OrderBy(u => u.Edificio).ThenBy(u => u.Departamento);
+            return data.OrderBy(u => u.Edificio).ThenBy(u => u.Departamento)
+                       .Select(u => new UbicacionDto
+                       {
+                           Id = u.Id,
+                           Edificio = u.Edificio,
+                           Departamento = u.Departamento,
+                           Nombre = $"{u.Edificio} - {u.Departamento} - {u.Oficina}"
+                       }).ToList();
         }
 
         public async Task<Ubicacion?> ObtenerPorIdAsync(Guid id)

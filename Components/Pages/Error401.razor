@@ -1,0 +1,35 @@
+@page "/error/401"
+@page "/unauthorized"
+@rendermode InteractiveServer
+@layout Sistema_de_Gestion_de_Activos.Components.Layout.EmptyLayout
+
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center px-4 py-8">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-8 text-center">
+        
+        <h1 class="text-2xl font-bold text-red-600 dark:text-red-500 mb-2">Acceso no autorizado</h1>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">No tienes permisos para acceder a esta página. Por favor, inicia sesión con una cuenta que tenga los permisos necesarios.</p>
+        
+        <!-- Animación Lottie -->
+        <div id="lottie-401" style="width: 250px; height: 250px; margin: 0 auto 20px auto;"></div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+            <a href="/login" class="px-5 py-2.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 rounded-lg dark:focus:ring-primary-900 transition-colors">
+                Ir a Login
+            </a>
+            <a href="/" class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 rounded-lg dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 transition-colors">
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+@inject IJSRuntime JSRuntime
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("loadLottieAnimation", "lottie-401", "https://lottie.host/f98bc05c-9875-48d1-bd4b-5c331788e2de/4Ghd22y6Zs.json");
+        }
+    }
+}

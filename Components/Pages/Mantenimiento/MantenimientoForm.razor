@@ -4,10 +4,9 @@
 @attribute [Authorize(Roles = "Administrador,Gestor,Tecnico")]
 @using Sistema_de_Gestion_de_Activos.Application.Interfaces
 @using Sistema_de_Gestion_de_Activos.Domain.Enums
-@using Sistema_de_Gestion_de_Activos.Data
-@using Microsoft.EntityFrameworkCore
+@using Sistema_de_Gestion_de_Activos.Application.DTOs.Activos
 @inject IMantenimientoService MantenimientoService
-@inject SgaDbContext DbContext
+@inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IActivoService ActivoService
 @inject NavigationManager Navigation
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IUsuarioService UsuarioService
 @inject Sistema_de_Gestion_de_Activos.Application.Interfaces.IAlertService AlertService
@@ -126,7 +125,7 @@
 @code {
     [Parameter] public Guid? Id { get; set; }
     private MantenimientoCreateDto form = new() { FechaInicio = DateTime.Today };
-    private List<Sistema_de_Gestion_de_Activos.Domain.Entities.Activo> activos = new();
+    private List<ActivoResponseDto> activos = new();
     private List<Sistema_de_Gestion_de_Activos.Application.DTOs.Usuarios.UsuarioResponseDto> tecnicos = new();
     
     private bool isSubmitting;
@@ -134,10 +133,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        activos = await DbContext.Activos
+        var todosActivos = await ActivoService.ObtenerTodosAsync();
+        activos = todosActivos
             .Where(a => a.Estado != EstadoActivo.Baja)
             .OrderBy(a => a.Codigo)
-            .ToListAsync();
+            .ToList();
             
         var usuarios = await UsuarioService.ObtenerTodosAsync();
         tecnicos = usuarios.Where(u => u.RolId != Guid.Empty).ToList(); // Ideally filter by Role Tecnico if available
