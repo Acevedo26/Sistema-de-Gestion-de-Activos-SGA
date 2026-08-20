@@ -126,108 +126,246 @@ else
 
     <!-- Tabs -->
     <div class="border-b border-gray-200 dark:border-gray-800 mb-6">
-        <nav class="-mb-px flex space-x-8">
-            <a href="#" class="border-primary-500 text-primary-600 dark:text-primary-500 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Información Financiera</a>
-            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Mantenimiento</a>
-            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Historial</a>
-            <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">Análisis</a>
+        <nav class="-mb-px flex overflow-x-auto whitespace-nowrap">
+            <button @onclick="@(() => SetActiveTab("financiera"))" class="py-4 px-4 text-sm font-medium border-b-2 transition-colors @(activeTab == "financiera" ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-500" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300")">
+                Información Financiera
+            </button>
+            <button @onclick="@(() => SetActiveTab("mantenimiento"))" class="py-4 px-4 text-sm font-medium border-b-2 transition-colors @(activeTab == "mantenimiento" ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-500" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300")">
+                Mantenimiento
+            </button>
+            <button @onclick="@(() => SetActiveTab("historial"))" class="py-4 px-4 text-sm font-medium border-b-2 transition-colors @(activeTab == "historial" ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-500" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300")">
+                Historial
+            </button>
+            <button @onclick="@(() => SetActiveTab("analisis"))" class="py-4 px-4 text-sm font-medium border-b-2 transition-colors @(activeTab == "analisis" ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-500" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-300")">
+                Análisis
+            </button>
         </nav>
     </div>
 
-    <!-- Financial Information Content -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Financial Card -->
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Actual</h3>
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    <div>
+        @if (activeTab == "financiera")
+        {
+            <!-- Financial Information Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+                <!-- Financial Card -->
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Actual</h3>
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            </div>
+                        </div>
+                        <div class="mb-8">
+                            <span class="text-4xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</span>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Depreciación Consumida</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">@Math.Round(asset.PorcentajeDepreciacion)%</span>
+                            </div>
+                            <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                                <div class="h-full bg-primary-500 rounded-full" style="width: @Math.Round(asset.PorcentajeDepreciacion)%"></div>
+                            </div>
+                            <div class="mt-2 text-right">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">@FormatCurrency(asset.CostoInicial - asset.ValorActual) acumulado</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="mb-8">
-                    <span class="text-4xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</span>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                        <div>
+                            <h4 class="text-xs text-gray-500 dark:text-gray-400">Costo Original</h4>
+                            <p class="font-medium text-gray-900 dark:text-white">@FormatCurrency(asset.CostoInicial)</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs text-gray-500 dark:text-gray-400">Fecha Adquisición</h4>
+                            <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs text-gray-500 dark:text-gray-400">Vida Útil Asignada</h4>
+                            <p class="font-medium text-gray-900 dark:text-white">@vidaUtil años</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs text-gray-500 dark:text-gray-400">Fin Vida Útil Estimada</h4>
+                            <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.AddYears(vidaUtil).ToString("dd/MM/yyyy")</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-8">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Depreciación Consumida</span>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">@Math.Round(asset.PorcentajeDepreciacion)%</span>
+                <!-- Area Chart Widget -->
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col w-full">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h5 class="text-2xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</h5>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Evolución de Valor</p>
+                        </div>
+                        <div class="flex items-center px-2.5 py-0.5 text-sm font-medium text-red-600 dark:text-red-500 text-center">
+                            <svg class="w-4 h-4 mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0 0-4-4m4 4 4-4"/></svg>
+                            -@Math.Round(asset.PorcentajeDepreciacion)%
+                        </div>
                     </div>
-                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                        <div class="h-full bg-primary-500 rounded-full" style="width: @Math.Round(asset.PorcentajeDepreciacion)%"></div>
-                    </div>
-                    <div class="mt-2 text-right">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">@FormatCurrency(asset.CostoInicial - asset.ValorActual) acumulado</span>
+                    <div id="area-chart" class="w-full"></div>
+                    
+                    <div class="grid grid-cols-1 items-center border-t border-gray-100 dark:border-gray-800 justify-between mt-4">
+                        <div class="flex justify-between items-center pt-4">
+                            <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown" data-dropdown-placement="bottom" class="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-center inline-flex items-center" type="button">
+                                Vida Útil (@vidaUtil años)
+                                <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                            </button>
+                            <a href="/activos" class="inline-flex items-center text-primary-600 bg-transparent border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 font-medium rounded-lg text-sm px-3 py-2">
+                                Ver Reporte
+                                <svg class="w-4 h-4 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+        }
+        else if (activeTab == "mantenimiento")
+        {
+            <!-- Mantenimientos Card -->
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col animate-fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Mantenimientos</h3>
+                    <a href="/mantenimientos?activoId=@asset.Id" class="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">Ver todos</a>
+                </div>
+                @if (asset.Mantenimientos.Any())
+                {
+                    <div class="space-y-4">
+                        @foreach (var mant in asset.Mantenimientos)
+                        {
+                            var isPrev = mant.Tipo == Sistema_de_Gestion_de_Activos.Domain.Enums.TipoMantenimiento.Preventivo;
+                            var badgeClass = isPrev ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+                            var estadoBadge = mant.Estado == Sistema_de_Gestion_de_Activos.Domain.Enums.EstadoMantenimiento.Finalizado ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+                            
+                            <div class="p-4 border border-gray-100 rounded-lg dark:border-gray-800">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium @badgeClass mb-1">
+                                            @mant.Tipo
+                                        </span>
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">@mant.Descripcion</h4>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-900 dark:text-white">@FormatCurrency(mant.Costo)</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-3">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">@mant.FechaInicio.ToString("dd MMM yyyy")</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium @estadoBadge">
+                                        @mant.Estado
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">No hay registros de mantenimiento.</div>
+                }
+            </div>
+        }
+        else if (activeTab == "historial")
+        {
+            <!-- Historial Card -->
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col animate-fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Historial de Movimientos</h3>
+                </div>
+                @if (asset.Movimientos.Any())
+                {
+                    <ol class="relative border-l border-gray-200 dark:border-gray-700 ml-3 mt-2">
+                        @foreach (var mov in asset.Movimientos)
+                        {
+                            <li class="mb-6 ml-4">
+                                <div class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -left-1.5 border border-white dark:border-gray-900 dark:bg-gray-700"></div>
+                                <time class="mb-1 text-xs font-normal leading-none text-gray-400 dark:text-gray-500">@mov.FechaMovimiento.ToString("dd MMM yyyy, HH:mm")</time>
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white mt-1">@mov.UbicacionAnterior → @mov.UbicacionNueva</h4>
+                                <p class="text-xs font-normal text-gray-500 dark:text-gray-400 mt-1">Por: @mov.UsuarioOperador</p>
+                            </li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <div class="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">No hay movimientos registrados.</div>
+                }
+            </div>
+        }
+        else if (activeTab == "analisis")
+        {
+            <!-- Analisis Card -->
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 animate-fade-in">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Análisis de Rendimiento</h3>
+                
+                @if (asset.Analisis.AlertaCostoExcesivo)
+                {
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-600 dark:text-red-500 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <h4 class="text-sm font-bold text-red-800 dark:text-red-400">Alerta de Costo Excesivo</h4>
+                        </div>
+                        <p class="text-sm text-red-700 dark:text-red-300 mt-1 ml-7">El costo acumulado de mantenimiento supera el 30% del valor actual. Se recomienda evaluar el reemplazo.</p>
+                    </div>
+                }
 
-            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <div>
-                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Costo Original</h4>
-                    <p class="font-medium text-gray-900 dark:text-white">@FormatCurrency(asset.CostoInicial)</p>
-                </div>
-                <div>
-                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Fecha Adquisición</h4>
-                    <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.ToString("dd/MM/yyyy")</p>
-                </div>
-                <div>
-                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Vida Útil Asignada</h4>
-                    <p class="font-medium text-gray-900 dark:text-white">@vidaUtil años</p>
-                </div>
-                <div>
-                    <h4 class="text-xs text-gray-500 dark:text-gray-400">Fin Vida Útil Estimada</h4>
-                    <p class="font-medium text-gray-900 dark:text-white">@asset.FechaAdquisicion.AddYears(vidaUtil).ToString("dd/MM/yyyy")</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Area Chart Widget -->
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col w-full">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.ValorActual)</h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Evolución de Valor</p>
-                </div>
-                <div class="flex items-center px-2.5 py-0.5 text-sm font-medium text-red-600 dark:text-red-500 text-center">
-                    <svg class="w-4 h-4 mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0 0-4-4m4 4 4-4"/></svg>
-                    -@Math.Round(asset.PorcentajeDepreciacion)%
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Costo Mantenimiento</h4>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">@FormatCurrency(asset.Analisis.CostoTotalMantenimiento)</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Relación Costo / Valor</h4>
+                        <div class="flex items-center gap-3">
+                            <p class="text-2xl font-bold @(asset.Analisis.AlertaCostoExcesivo ? "text-red-600 dark:text-red-500" : "text-gray-900 dark:text-white")">
+                                @Math.Round(asset.Analisis.PorcentajeCostoVsValor, 1)%
+                            </p>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+                                @asset.Analisis.Recomendacion
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div class="h-2.5 rounded-full @(asset.Analisis.AlertaCostoExcesivo ? "bg-red-600" : "bg-primary-600")" style="width: @(Math.Min(asset.Analisis.PorcentajeCostoVsValor, 100))%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="area-chart" class="w-full"></div>
-            
-            <div class="grid grid-cols-1 items-center border-t border-gray-100 dark:border-gray-800 justify-between mt-4">
-                <div class="flex justify-between items-center pt-4">
-                    <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown" data-dropdown-placement="bottom" class="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-center inline-flex items-center" type="button">
-                        Vida Útil (@vidaUtil años)
-                        <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
-                    </button>
-                    <a href="/activos" class="inline-flex items-center text-primary-600 bg-transparent border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 font-medium rounded-lg text-sm px-3 py-2">
-                        Ver Reporte
-                        <svg class="w-4 h-4 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
-                    </a>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 }
 
 @code {
     [Parameter] public Guid Id { get; set; }
     
-    private ActivoResponseDto? asset;
+    private ActivoDetalleCompletoDto? asset;
     private bool isLoading = true;
     private string categoriaNombre = "—";
     private string ubicacionNombre = "—";
     private int vidaUtil = 0;
+
+    private string activeTab = "financiera";
+
+    private void SetActiveTab(string tab)
+    {
+        if (activeTab != tab)
+        {
+            activeTab = tab;
+            if (tab == "financiera")
+            {
+                chartRendered = false;
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             isLoading = true;
-            asset = await ActivoService.ObtenerPorIdAsync(Id);
+            asset = await ActivoService.ObtenerDetalleCompletoAsync(Id);
             
             if (asset != null)
             {
@@ -257,7 +395,7 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!isLoading && asset != null && !chartRendered)
+        if (!isLoading && asset != null && activeTab == "financiera" && !chartRendered)
         {
             chartRendered = true;
             // Generar datos falsos de depreciación para el gráfico basado en el valor actual

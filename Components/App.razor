@@ -82,8 +82,8 @@
             }
 
                 .dark input:focus, .dark select:focus, .dark textarea:focus {
-                    --tw-ring-color: #22c55e !important; /* green-500 */
-                    border-color: #22c55e !important;
+                    --tw-ring-color: #0d9488 !important; /* green-500 */
+                    border-color: #0d9488 !important;
                 }
 
             /* En app.css o similar */
@@ -173,69 +173,101 @@
                     chart.render();
                 }
             }
-            window.renderFlowbiteAreaChart = function(chartId, dataValues, labels, prefix) {
-                if(document.getElementById(chartId) && typeof ApexCharts !== 'undefined') {
-                    var options = {
-                        chart: { height: 150, type: "area", fontFamily: "Inter, sans-serif", dropShadow: { enabled: false }, toolbar: { show: false } },
-                        tooltip: { enabled: true, x: { show: false }, y: { formatter: function(val) { return prefix ? prefix + val.toLocaleString('es-CR') : val.toLocaleString('es-CR'); } } },
-                        fill: { type: "gradient", gradient: { opacityFrom: 0.55, opacityTo: 0, shade: "#0d9488", gradientToColors: ["#0d9488"] } },
-                        dataLabels: { enabled: false },
-                        stroke: { width: 4, colors: ["#0d9488"] },
-                        grid: { show: false, padding: { left: 0, right: 0, top: 0, bottom: 0 } },
-                        series: [{ name: "Valor", data: dataValues, color: "#0d9488" }],
-                        xaxis: { categories: labels, labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false } },
-                        yaxis: { show: false }
-                    };
-                    document.getElementById(chartId).innerHTML = '';
-                    var chart = new ApexCharts(document.getElementById(chartId), options);
-                    chart.render();
-                }
-            }
-            window.renderFlowbiteDonutChart = function(chartId, dataValues, labels) {
-                if(document.getElementById(chartId) && typeof ApexCharts !== 'undefined') {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    var options = {
-                        series: dataValues,
-                        colors: ["#0d9488", "#f3f4f6"],
-                        chart: { height: 250, width: "100%", type: "donut", fontFamily: "Inter, sans-serif" },
-                        stroke: { colors: ["transparent"], lineCap: "" },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    labels: {
-                                        show: true,
-                                        name: {
-                                            show: true,
-                                            fontFamily: "Inter, sans-serif",
-                                            offsetY: 20,
-                                        },
-                                        total: {
-                                            showAlways: true,
-                                            show: true,
-                                            label: "Activos",
-                                            fontFamily: "Inter, sans-serif",
-                                            formatter: function (w) { return w.globals.seriesTotals.reduce((a, b) => a + b, 0); }
-                                        },
-                                        value: {
-                                            show: true,
-                                            fontFamily: "Inter, sans-serif",
-                                            offsetY: -20,
-                                            formatter: function (value) { return value; }
-                                        }
-                                    },
-                                    size: "80%"
+        // Registro global de gráficos para actualizarlos al cambiar el tema
+        window.sgaCharts = window.sgaCharts || {};
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === "class") {
+                        for (const id in window.sgaCharts) {
+                            const chartData = window.sgaCharts[id];
+                            if (document.getElementById(id)) {
+                                if (chartData.type === 'area') {
+                                    window.renderFlowbiteAreaChart(id, chartData.dataValues, chartData.labels, chartData.prefix);
+                                } else if (chartData.type === 'donut') {
+                                    window.renderFlowbiteDonutChart(id, chartData.dataValues, chartData.labels);
                                 }
                             }
-                        },
-                        labels: labels,
-                        dataLabels: { enabled: false },
-                        legend: { show: false }
-                    };
-                    document.getElementById(chartId).innerHTML = '';
-                    var chart = new ApexCharts(document.getElementById(chartId), options);
-                    chart.render();
-                }
+                        }
+                    }
+                });
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        });
+
+        window.renderFlowbiteAreaChart = function(chartId, dataValues, labels, prefix) {
+            if(document.getElementById(chartId) && typeof ApexCharts !== 'undefined') {
+                const isDark = document.documentElement.classList.contains('dark');
+                var options = {
+                    theme: { mode: isDark ? 'dark' : 'light' },
+                    chart: { height: 150, type: "area", fontFamily: "Inter, sans-serif", dropShadow: { enabled: false }, toolbar: { show: false }, background: 'transparent' },
+                    tooltip: { theme: isDark ? 'dark' : 'light', enabled: true, x: { show: false }, y: { formatter: function(val) { return prefix ? prefix + val.toLocaleString('es-CR') : val.toLocaleString('es-CR'); } } },
+                    fill: { type: "gradient", gradient: { opacityFrom: 0.55, opacityTo: 0, shade: "#0d9488", gradientToColors: ["#0d9488"] } },
+                    dataLabels: { enabled: false },
+                    stroke: { width: 4, colors: ["#0d9488"] },
+                    grid: { show: false, padding: { left: 0, right: 0, top: 0, bottom: 0 } },
+                    series: [{ name: "Valor", data: dataValues, color: "#0d9488" }],
+                    xaxis: { categories: labels, labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
+                    yaxis: { show: false }
+                };
+                document.getElementById(chartId).innerHTML = '';
+                var chart = new ApexCharts(document.getElementById(chartId), options);
+                chart.render();
+                window.sgaCharts[chartId] = { type: 'area', dataValues: dataValues, labels: labels, prefix: prefix };
             }
+        }
+
+        window.renderFlowbiteDonutChart = function(chartId, dataValues, labels) {
+            if(document.getElementById(chartId) && typeof ApexCharts !== 'undefined') {
+                const isDark = document.documentElement.classList.contains('dark');
+                var options = {
+                    theme: { mode: isDark ? 'dark' : 'light' },
+                    series: dataValues,
+                    colors: isDark ? ["#0d9488", "#374151"] : ["#0d9488", "#f3f4f6"],
+                    chart: { background: 'transparent', height: 250, width: "100%", type: "donut", fontFamily: "Inter, sans-serif" },
+                    stroke: { colors: ["transparent"], lineCap: "" },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: true,
+                                    name: {
+                                        show: true,
+                                        fontFamily: "Inter, sans-serif",
+                                        offsetY: 20,
+                                        color: isDark ? '#9ca3af' : '#6b7280'
+                                    },
+                                    total: {
+                                        showAlways: true,
+                                        show: true,
+                                        label: "Activos",
+                                        fontFamily: "Inter, sans-serif",
+                                        color: isDark ? '#ffffff' : '#1f2937',
+                                        formatter: function (w) { return w.globals.seriesTotals.reduce((a, b) => a + b, 0); }
+                                    },
+                                    value: {
+                                        show: true,
+                                        fontFamily: "Inter, sans-serif",
+                                        offsetY: -20,
+                                        color: isDark ? '#ffffff' : '#1f2937',
+                                        formatter: function (value) { return value; }
+                                    }
+                                },
+                                size: "80%"
+                            }
+                        }
+                    },
+                    labels: labels,
+                    dataLabels: { enabled: false },
+                    legend: { show: false }
+                };
+                document.getElementById(chartId).innerHTML = '';
+                var chart = new ApexCharts(document.getElementById(chartId), options);
+                chart.render();
+                window.sgaCharts[chartId] = { type: 'donut', dataValues: dataValues, labels: labels };
+            }
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

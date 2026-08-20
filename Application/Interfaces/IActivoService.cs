@@ -13,5 +13,7 @@ namespace Sistema_de_Gestion_de_Activos.Application.Interfaces
         Task<IEnumerable<ActivoResponseDto>> ObtenerTodosAsync();
         
         Task<ActivoResponseDto?> ObtenerPorIdAsync(Guid id);
+        
+        Task<ActivoDetalleCompletoDto?> ObtenerDetalleCompletoAsync(Guid id);
     }
 }

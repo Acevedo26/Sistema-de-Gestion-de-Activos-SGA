@@ -72,6 +72,104 @@ namespace Sistema_de_Gestion_de_Activos.Services
             };
         }
 
+        public async Task<ActivoDetalleCompletoDto?> ObtenerDetalleCompletoAsync(Guid id)
+        {
+            var activo = await _context.Activos
+                .Include(a => a.Depreciacion)
+                .Include(a => a.Responsable)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (activo == null)
+                return null;
+
+            var mantenimientos = await _context.Mantenimientos
+                .Include(m => m.Tecnico)
+                .Where(m => m.ActivoId == id)
+                .OrderByDescending(m => m.FechaInicio)
+                .ToListAsync();
+
+            var movimientos = await _context.Movimientos
+                .Include(m => m.UbicacionOrigen)
+                .Include(m => m.UbicacionDestino)
+                .Include(m => m.Usuario)
+                .Where(m => m.ActivoId == id)
+                .OrderByDescending(m => m.FechaMovimiento)
+                .ToListAsync();
+
+            var dto = new ActivoDetalleCompletoDto
+            {
+                Id = activo.Id,
+                Codigo = activo.Codigo,
+                Descripcion = activo.Descripcion,
+                CategoriaId = activo.CategoriaId,
+                UbicacionId = activo.UbicacionId,
+                FechaAdquisicion = activo.FechaAdquisicion,
+                CostoInicial = activo.CostoInicial,
+                Proveedor = activo.Proveedor,
+                NumeroSerie = activo.NumeroSerie,
+                Estado = activo.Estado,
+                ResponsableId = activo.ResponsableId,
+                ResponsableNombre = activo.Responsable != null ? activo.Responsable.Nombre : null,
+                ValorActual = activo.Depreciacion != null ? activo.Depreciacion.ValorActual : activo.CostoInicial,
+                PorcentajeDepreciacion = activo.Depreciacion != null ? activo.Depreciacion.PorcentajeConsumido : 0
+            };
+
+            dto.Mantenimientos = mantenimientos.Take(10).Select(m => new MantenimientoResumenDto
+            {
+                Id = m.Id,
+                Tipo = m.Tipo,
+                Descripcion = m.Descripcion ?? string.Empty,
+                TecnicoNombre = m.Tecnico?.Nombre ?? "Sin Técnico",
+                FechaInicio = m.FechaInicio,
+                FechaFin = m.FechaFin,
+                Costo = m.Costo,
+                Estado = m.Estado
+            }).ToList();
+
+            dto.Movimientos = movimientos.Take(10).Select(m => new MovimientoResumenDto
+            {
+                Id = m.Id,
+                FechaMovimiento = m.FechaMovimiento,
+                UsuarioOperador = m.Usuario?.Nombre ?? "Sistema",
+                UbicacionAnterior = $"{m.UbicacionOrigen.Edificio} - {m.UbicacionOrigen.Departamento}",
+                UbicacionNueva = $"{m.UbicacionDestino.Edificio} - {m.UbicacionDestino.Departamento}",
+                Observaciones = m.Observaciones ?? string.Empty
+            }).ToList();
+
+            decimal costoMantenimiento = mantenimientos
+                .Where(m => m.Estado == EstadoMantenimiento.Finalizado)
+                .Sum(m => m.Costo);
+
+            decimal porcentajeCostoVsValor = 0;
+            if (dto.ValorActual > 0)
+            {
+                porcentajeCostoVsValor = (costoMantenimiento / dto.ValorActual) * 100;
+            }
+
+            bool alertaExcesivo = porcentajeCostoVsValor > 30;
+            
+            string recomendacion = "Mantenimiento rentable";
+            if (alertaExcesivo)
+            {
+                recomendacion = "Reemplazo recomendado";
+            }
+            else if (porcentajeCostoVsValor > 15)
+            {
+                recomendacion = "Vigilar costo de mantenimiento";
+            }
+
+            dto.Analisis = new AnalisisRendimientoDto
+            {
+                CostoTotalMantenimiento = costoMantenimiento,
+                ValorActual = dto.ValorActual,
+                PorcentajeCostoVsValor = porcentajeCostoVsValor,
+                AlertaCostoExcesivo = alertaExcesivo,
+                Recomendacion = recomendacion
+            };
+
+            return dto;
+        }
+
         public async Task<ActivoResponseDto> CrearActivoAsync(ActivoRequestDto dto)
         {
             if (dto.CostoInicial <= 0) throw new InvalidOperationException("El costo inicial debe ser mayor que cero.");
